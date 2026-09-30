@@ -149,6 +149,38 @@ div.stButton > button:hover {
     margin: 20px 0;
 }
 
+
+#swingbyBanner {
+    display:none;
+    position:absolute;
+    left:50%;
+    top:24%;
+    transform:translateX(-50%);
+    padding:14px 24px;
+    border:2px solid rgba(34,211,238,0.85);
+    border-radius:999px;
+    background:rgba(3,15,30,0.88);
+    color:#67e8f9;
+    font-size:20px;
+    font-weight:900;
+    letter-spacing:1px;
+    box-shadow:0 0 30px rgba(34,211,238,0.35);
+    z-index:30;
+}
+
+#swingbyGuide {
+    position:absolute;
+    left:50%;
+    bottom:42px;
+    transform:translateX(-50%);
+    padding:8px 14px;
+    border-radius:10px;
+    background:rgba(2,8,23,0.72);
+    color:#c7d2fe;
+    font-size:12px;
+    z-index:12;
+    pointer-events:none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -775,6 +807,7 @@ canvas {
             <div class="hudRow">방향 : <span id="angleText">0</span>°</div>
             <div class="hudRow">목표 거리 : <span id="distanceText">0</span></div>
             <div class="hudRow">중력 영향 : <span id="gravityText">0</span></div>
+            <div class="hudRow">스윙바이 : <span id="swingbyText">0회</span></div>
             <div class="hudRow">우주 위치 : <span id="positionText">0, 0</span></div>
         </div>
 
@@ -802,6 +835,10 @@ canvas {
         <div id="cameraHint">
             🌌 우주선의 이동에 따라 화면이 이동합니다
         </div>
+
+        <div id="swingbyBanner">🚀 SWING-BY</div>
+
+        <div id="swingbyGuide">🪐 행성 가까이 접근 → 중력으로 궤도 변경 → 공전 속도를 이용해 가속/감속</div>
 
         <div id="message">
             <h1 id="messageTitle">💥 충돌</h1>
@@ -834,6 +871,9 @@ let missionComplete = false;
 let keys = {};
 let stars = [];
 let planets = [];
+let swingbyCount = 0;
+let swingbyBannerTimer = 0;
+let lastSwingbyPlanet = null;
 
 const WORLD_WIDTH = 5200;
 const WORLD_HEIGHT = 2600;
@@ -921,6 +961,9 @@ function createPlanets() {
             orbitAngle: rand(0, Math.PI * 2),
             orbitSpeed: rand(-0.0045, 0.0045),
             radius: radius,
+            vx: 0,
+            vy: 0,
+            swingUsed: false,
             mass: rand(60, 190),
             color: [
                 "#64748b",
@@ -942,8 +985,12 @@ function initGame() {
 
     gameOver = false;
     missionComplete = false;
+    swingbyCount = 0;
+    swingbyBannerTimer = 0;
+    lastSwingbyPlanet = null;
 
     document.getElementById("message").style.display = "none";
+    document.getElementById("swingbyBanner").style.display = "none";
 
     // 출발 지점
     ship.x = 220;
@@ -972,20 +1019,34 @@ function initGame() {
     gameLoop();
 }
 
-window.addEventListener("keydown", function(e) {
-    if (
-        e.key === "ArrowUp" ||
-        e.key === "ArrowDown" ||
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight"
-    ) {
+function setArrowKey(e, pressed) {
+    const code = e.code || "";
+    const key = e.key || "";
+    const isArrow =
+        code === "ArrowUp" || code === "ArrowDown" ||
+        code === "ArrowLeft" || code === "ArrowRight" ||
+        key === "ArrowUp" || key === "ArrowDown" ||
+        key === "ArrowLeft" || key === "ArrowRight";
+
+    if (isArrow) {
         e.preventDefault();
-        keys[e.key] = true;
+        e.stopPropagation();
+        keys[code || key] = pressed;
+        keys[key] = pressed;
+        return false;
     }
-});
+}
+
+window.addEventListener("keydown", function(e) {
+    setArrowKey(e, true);
+}, { passive: false });
 
 window.addEventListener("keyup", function(e) {
-    keys[e.key] = false;
+    setArrowKey(e, false);
+}, { passive: false });
+
+window.addEventListener("blur", function() {
+    keys = {};
 });
 
 function updatePlanets() {
@@ -997,6 +1058,10 @@ function updatePlanets() {
 
         p.y = p.centerY +
             Math.sin(p.orbitAngle) * p.orbitRadius;
+
+        // 행성의 공전 속도: 스윙바이에서 이 속도가 우주선에 전달될 수 있음
+        p.vx = -Math.sin(p.orbitAngle) * p.orbitRadius * p.orbitSpeed;
+        p.vy =  Math.cos(p.orbitAngle) * p.orbitRadius * p.orbitSpeed;
     });
 }
 
@@ -1005,6 +1070,76 @@ function distance(x1, y1, x2, y2) {
         (x2 - x1) * (x2 - x1) +
         (y2 - y1) * (y2 - y1)
     );
+}
+
+function performSwingBy(p, dist) {
+    // 행성 기준 상대속도를 구한다.
+    const rvx = ship.vx - p.vx;
+    const rvy = ship.vy - p.vy;
+    const vInf = Math.max(Math.sqrt(rvx * rvx + rvy * rvy), 0.35);
+
+    // 가장 가까운 접근거리(충돌 직전보다 조금 바깥)를 사용한 단순화된 편향각 계산
+    const rp = Math.max(dist, p.radius + ship.radius + 8);
+    const mu = p.mass * 45;
+    const turnAngle = clamp(
+        2 * Math.atan(mu / (rp * vInf * vInf)),
+        0.12,
+        1.05
+    );
+
+    // 어느 방향으로 휘어질지는 접근 방향과 행성-우주선 위치의 외적으로 결정
+    const rx = ship.x - p.x;
+    const ry = ship.y - p.y;
+    const cross = rx * rvy - ry * rvx;
+    const sign = cross >= 0 ? 1 : -1;
+    const a = sign * turnAngle;
+
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    const newRvx = rvx * cosA - rvy * sinA;
+    const newRvy = rvx * sinA + rvy * cosA;
+
+    // 행성 기준에서 방향을 바꾼 뒤, 행성의 공전 속도를 다시 더한다.
+    ship.vx = newRvx + p.vx;
+    ship.vy = newRvy + p.vy;
+
+    // 지나치게 빠르거나 느려지지 않도록 게임용 범위에서 제한
+    const v = Math.sqrt(ship.vx * ship.vx + ship.vy * ship.vy);
+    const maxSwingSpeed = GAME.speed * 2.15;
+    if (v > maxSwingSpeed) {
+        ship.vx = ship.vx / v * maxSwingSpeed;
+        ship.vy = ship.vy / v * maxSwingSpeed;
+    }
+
+    swingbyCount += 1;
+    p.swingUsed = true;
+    lastSwingbyPlanet = p;
+    swingbyBannerTimer = 150;
+
+    const banner = document.getElementById("swingbyBanner");
+    banner.style.display = "block";
+    banner.textContent = "🚀 SWING-BY 성공!  궤도 변경 + 공전 에너지 이용";
+
+    const speedNow = Math.sqrt(ship.vx * ship.vx + ship.vy * ship.vy);
+    document.getElementById("swingbyText").textContent = swingbyCount + "회";
+
+    setTimeout(function() {
+        if (swingbyBannerTimer <= 0) {
+            banner.style.display = "none";
+        }
+    }, 1800);
+}
+
+function checkSwingBys() {
+    planets.forEach(function(p) {
+        const d = distance(ship.x, ship.y, p.x, p.y);
+
+        // 행성과 충돌하지 않으면서 아주 가까이 지나갈 때 스윙바이 발생
+        const swingRadius = p.radius + 95;
+        if (!p.swingUsed && d < swingRadius && d > p.radius + ship.radius + 3) {
+            performSwingBy(p, d);
+        }
+    });
 }
 
 function applyGravity() {
@@ -1063,7 +1198,7 @@ function applyGravity() {
 }
 
 function controlShip() {
-    if (keys["ArrowLeft"]) {
+    if (keys["ArrowLeft"] || keys["ArrowLeft"]) {
         ship.angle -= GAME.turnSpeed;
     }
 
@@ -1078,8 +1213,9 @@ function controlShip() {
     }
 
     if (keys["ArrowDown"]) {
-        ship.vx -= Math.cos(ship.angle) * 0.014;
-        ship.vy -= Math.sin(ship.angle) * 0.014;
+        // ↓ : 역추진. 속도를 줄이거나 진행 방향을 반대로 바꿀 수 있음.
+        ship.vx -= Math.cos(ship.angle) * 0.045;
+        ship.vy -= Math.sin(ship.angle) * 0.045;
     }
 
     let velocity = Math.sqrt(
@@ -1088,7 +1224,7 @@ function controlShip() {
     );
 
     const maxSpeed = GAME.speed * 1.35;
-    const minSpeed = Math.max(GAME.speed * 0.72, 0.8);
+    const minSpeed = 0.35;
 
     if (velocity > maxSpeed) {
         ship.vx = ship.vx / velocity * maxSpeed;
@@ -1172,8 +1308,8 @@ function checkCollisions() {
     if (targetDistance < ship.radius + target.radius) {
         endGame(
             true,
-            "🎉 임무 성공!",
-            "목표 행성에 성공적으로 도착했습니다!"
+            "🎉 스윙바이 탐사 성공!",
+            "목표 행성에 성공적으로 도착했습니다!<br>이번 비행에서 <strong>" + swingbyCount + "회</strong>의 스윙바이를 수행했습니다."
         );
     }
 }
@@ -1258,6 +1394,23 @@ function drawPlanet(p) {
     const s = worldToScreen(p.x, p.y);
 
     drawOrbit(p);
+
+    // 아직 스윙바이를 사용하지 않은 행성은 접근 가능 영역을 점선으로 표시
+    if (!p.swingUsed) {
+        ctx.beginPath();
+        ctx.arc(
+            s.x,
+            s.y,
+            p.radius + 95,
+            0,
+            Math.PI * 2
+        );
+        ctx.strokeStyle = "rgba(34,211,238,0.16)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 7]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 
     if (
         s.x < -80 ||
@@ -1599,6 +1752,8 @@ function drawMiniMap() {
 }
 
 function updateHUD() {
+    document.getElementById("swingbyText").textContent = swingbyCount + "회";
+    document.getElementById("positionText").textContent = Math.round(ship.x) + ", " + Math.round(ship.y);
     const velocity = Math.sqrt(
         ship.vx * ship.vx +
         ship.vy * ship.vy
@@ -1626,6 +1781,31 @@ function updateHUD() {
 
     document.getElementById("distanceText").textContent =
         Math.round(d);
+
+    let nearest = null;
+    let nearestD = Infinity;
+    planets.forEach(function(p) {
+        if (p.swingUsed) return;
+        const pd = distance(ship.x, ship.y, p.x, p.y);
+        if (pd < nearestD) {
+            nearestD = pd;
+            nearest = p;
+        }
+    });
+
+    const guide = document.getElementById("swingbyGuide");
+    if (nearest && nearestD < 260) {
+        if (nearestD < nearest.radius + 110) {
+            guide.textContent = "⚡ SWING-BY 접근! 행성에 충돌하지 않고 가까이 스쳐 지나가세요.";
+            guide.style.color = "#67e8f9";
+        } else {
+            guide.textContent = "🪐 스윙바이 후보 접근 중 — 행성 옆을 스쳐 지나가세요.";
+            guide.style.color = "#c7d2fe";
+        }
+    } else {
+        guide.textContent = "🪐 행성 가까이 접근 → 중력으로 궤도 변경 → 공전 속도를 이용해 가속/감속";
+        guide.style.color = "#c7d2fe";
+    }
 
     document.getElementById("positionText").textContent =
         Math.round(ship.x) + ", " +
@@ -1674,6 +1854,7 @@ function gameLoop() {
     updatePlanets();
     controlShip();
     applyGravity();
+    checkSwingBys();
     moveShip();
     updateCamera();
     checkCollisions();
