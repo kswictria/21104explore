@@ -1,9 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import json
 
 # ============================================================
-# ORBIT : 행성 탐사 우주선 게임
-# Streamlit + HTML/CSS/JavaScript
+# ORBIT : 행성 탐사 임무
 # ============================================================
 
 st.set_page_config(
@@ -13,9 +13,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ------------------------------------------------------------
-# Streamlit 상태
-# ------------------------------------------------------------
+# ============================================================
+# SESSION STATE
+# ============================================================
 
 if "page" not in st.session_state:
     st.session_state.page = 1
@@ -27,168 +27,201 @@ if "ship" not in st.session_state:
     st.session_state.ship = None
 
 
-# ------------------------------------------------------------
-# 공통 CSS
-# ------------------------------------------------------------
+# ============================================================
+# CSS
+# ============================================================
 
 st.markdown("""
 <style>
 
-    .stApp {
-        background:
-            radial-gradient(circle at 20% 20%, #18254a 0%, transparent 25%),
-            radial-gradient(circle at 80% 80%, #151a3d 0%, transparent 25%),
-            #050713;
-        color: white;
-    }
+.stApp {
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            #18254a 0%,
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 80% 80%,
+            #151a3d 0%,
+            transparent 25%
+        ),
+        #050713;
+    color: white;
+}
 
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
+header[data-testid="stHeader"] {
+    background: transparent;
+}
 
-    .block-container {
-        max-width: 1200px;
-        padding-top: 2rem;
-    }
+.block-container {
+    max-width: 1200px;
+    padding-top: 2rem;
+}
 
-    .title {
-        text-align: center;
-        font-size: 58px;
-        font-weight: 900;
-        letter-spacing: 8px;
-        color: #ffffff;
-        text-shadow:
-            0 0 10px #4cc9ff,
-            0 0 25px #4cc9ff;
-        margin-bottom: 5px;
-    }
+.title {
+    text-align: center;
+    font-size: 58px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: #ffffff;
+    text-shadow:
+        0 0 10px #4cc9ff,
+        0 0 25px #4cc9ff;
+    margin-bottom: 5px;
+}
 
-    .subtitle {
-        text-align: center;
-        color: #9ca9d8;
-        font-size: 18px;
-        margin-bottom: 40px;
-    }
+.subtitle {
+    text-align: center;
+    color: #9ca9d8;
+    font-size: 18px;
+    margin-bottom: 40px;
+}
 
-    .mission-card {
-        background: rgba(17, 25, 52, 0.85);
-        border: 1px solid rgba(96, 165, 250, 0.35);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 15px;
-        min-height: 230px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
+.mission-card {
+    background: rgba(17, 25, 52, 0.88);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 15px;
+    min-height: 230px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
 
-    .mission-card h2 {
-        color: white;
-        margin-top: 0;
-    }
+.mission-card h2 {
+    color: white;
+    margin-top: 0;
+}
 
-    .mission-card p {
-        color: #c4cbea;
-        line-height: 1.7;
-    }
+.mission-card p {
+    color: #c4cbea;
+    line-height: 1.7;
+}
 
-    .stat {
-        display: inline-block;
-        background: rgba(76, 201, 240, 0.12);
-        border: 1px solid rgba(76, 201, 240, 0.3);
-        border-radius: 8px;
-        padding: 5px 9px;
-        margin: 3px;
-        font-size: 13px;
-        color: #bdeeff;
-    }
+.stat {
+    display: inline-block;
+    background: rgba(76, 201, 240, 0.12);
+    border: 1px solid rgba(76, 201, 240, 0.3);
+    border-radius: 8px;
+    padding: 5px 9px;
+    margin: 3px;
+    font-size: 13px;
+    color: #bdeeff;
+}
 
-    .section-title {
-        text-align: center;
-        color: white;
-        font-size: 28px;
-        font-weight: 800;
-        margin: 15px 0 25px 0;
-    }
+.section-title {
+    text-align: center;
+    color: white;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 15px 0 25px 0;
+}
 
-    div.stButton > button {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid #3b82f6;
-        background: linear-gradient(135deg, #172554, #1e3a8a);
-        color: white;
-        font-weight: 700;
-        padding: 12px;
-        transition: 0.2s;
-    }
+div.stButton > button {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #3b82f6;
+    background: linear-gradient(
+        135deg,
+        #172554,
+        #1e3a8a
+    );
+    color: white;
+    font-weight: 700;
+    padding: 12px;
+    transition: 0.2s;
+}
 
-    div.stButton > button:hover {
-        border-color: #67e8f9;
-        box-shadow: 0 0 18px rgba(56,189,248,0.35);
-        transform: translateY(-2px);
-    }
+div.stButton > button:hover {
+    border-color: #67e8f9;
+    box-shadow:
+        0 0 18px rgba(56,189,248,0.35);
+    transform: translateY(-2px);
+}
 
-    .info-box {
-        background: rgba(15,23,42,0.8);
-        border-left: 4px solid #38bdf8;
-        border-radius: 10px;
-        padding: 15px 20px;
-        color: #cbd5e1;
-        line-height: 1.7;
-        margin: 20px 0;
-    }
+.info-box {
+    background: rgba(15,23,42,0.8);
+    border-left: 4px solid #38bdf8;
+    border-radius: 10px;
+    padding: 15px 20px;
+    color: #cbd5e1;
+    line-height: 1.7;
+    margin: 20px 0;
+}
 
 </style>
 """, unsafe_allow_html=True)
 
 
 # ============================================================
-# PAGE 1
+# PAGE 1 : 임무 선택
 # ============================================================
 
 if st.session_state.page == 1:
 
-    st.markdown('<div class="title">ORBIT</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="subtitle">행성 탐사 임무를 선택하고 우주선을 출발시키세요.</div>',
+        '<div class="title">ORBIT</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-title">🪐 01. 탐사 임무 선택</div>',
+        '<div class="subtitle">'
+        '행성 탐사 임무를 선택하고 우주선을 출발시키세요.'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="section-title">'
+        '🪐 01. 탐사 임무 선택'
+        '</div>',
         unsafe_allow_html=True
     )
 
     missions = {
+
         "화성": {
             "emoji": "🔴",
             "gravity": 0.38,
             "distance": 4200,
             "difficulty": "★★☆☆☆",
             "description":
-                "지구보다 중력이 약한 행성입니다. 목표 행성의 중력 영향이 비교적 작아 기본적인 조종을 연습하기 좋습니다."
+                "지구보다 중력이 약한 행성입니다. "
+                "목표 행성의 중력 영향이 비교적 작아 "
+                "기본적인 조종을 연습하기 좋습니다."
         },
+
         "금성": {
             "emoji": "🟡",
             "gravity": 0.90,
             "distance": 3600,
             "difficulty": "★★★☆☆",
             "description":
-                "지구와 비슷한 중력을 가진 행성입니다. 목표에 가까워질수록 우주선의 경로가 크게 휘어질 수 있습니다."
+                "지구와 비슷한 중력을 가진 행성입니다. "
+                "목표에 가까워질수록 우주선의 경로가 "
+                "크게 휘어질 수 있습니다."
         },
+
         "목성": {
             "emoji": "🟠",
             "gravity": 2.53,
             "distance": 5200,
             "difficulty": "★★★★★",
             "description":
-                "매우 큰 질량을 가진 행성입니다. 강한 중력 때문에 목표 주변에서 우주선의 진행 방향이 크게 변화할 수 있습니다."
+                "매우 큰 질량을 가진 행성입니다. "
+                "강한 중력 때문에 목표 주변에서 "
+                "우주선의 진행 방향이 크게 변화할 수 있습니다."
         },
+
         "해왕성": {
             "emoji": "🔵",
             "gravity": 1.14,
             "distance": 6800,
             "difficulty": "★★★★☆",
             "description":
-                "아주 먼 거리에 있는 행성입니다. 긴 비행시간 동안 여러 작은 행성의 중력과 공전 운동을 피해야 합니다."
+                "아주 먼 거리에 있는 행성입니다. "
+                "긴 비행시간 동안 여러 작은 행성의 "
+                "중력과 공전 운동을 피해야 합니다."
         }
     }
 
@@ -201,11 +234,25 @@ if st.session_state.page == 1:
             st.markdown(
                 f"""
                 <div class="mission-card">
-                    <h2>{data["emoji"]} {name}</h2>
-                    <p>{data["description"]}</p>
-                    <span class="stat">중력: {data["gravity"]} g</span>
-                    <span class="stat">거리: {data["distance"]} km</span>
-                    <span class="stat">난이도: {data["difficulty"]}</span>
+                    <h2>
+                        {data["emoji"]} {name}
+                    </h2>
+
+                    <p>
+                        {data["description"]}
+                    </p>
+
+                    <span class="stat">
+                        중력: {data["gravity"]} g
+                    </span>
+
+                    <span class="stat">
+                        거리: {data["distance"]} km
+                    </span>
+
+                    <span class="stat">
+                        난이도: {data["difficulty"]}
+                    </span>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -215,54 +262,72 @@ if st.session_state.page == 1:
                 f"{data['emoji']} {name} 탐사 임무 선택",
                 key=f"mission_{name}"
             ):
+
                 st.session_state.mission = name
                 st.session_state.page = 2
+
                 st.rerun()
 
 
 # ============================================================
-# PAGE 2
+# PAGE 2 : 우주선 선택
 # ============================================================
 
 elif st.session_state.page == 2:
 
     mission = st.session_state.mission
 
-    st.markdown('<div class="title">ORBIT</div>', unsafe_allow_html=True)
     st.markdown(
-        f'<div class="subtitle">목표 행성 : {mission}　|　02. 우주선 선택</div>',
+        '<div class="title">ORBIT</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-title">🚀 탐사에 사용할 우주선을 선택하세요</div>',
+        f'<div class="subtitle">'
+        f'목표 행성 : {mission}　|　02. 우주선 선택'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="section-title">'
+        '🚀 탐사에 사용할 우주선을 선택하세요'
+        '</div>',
         unsafe_allow_html=True
     )
 
     ships = {
+
         "노즈형 탐사선": {
             "emoji": "🚀",
             "speed": 6.5,
             "turn": 0.055,
             "stability": 0.75,
             "description":
-                "앞부분이 뾰족한 형태입니다. 고속 비행에 유리하지만 방향을 급격하게 변경하기 어렵습니다."
+                "앞부분이 뾰족한 형태입니다. "
+                "고속 비행에 유리하지만 "
+                "방향을 급격하게 변경하기 어렵습니다."
         },
+
         "캡슐형 탐사선": {
             "emoji": "🛸",
             "speed": 5.0,
             "turn": 0.085,
             "stability": 1.0,
             "description":
-                "둥근 캡슐 형태입니다. 속도는 조금 느리지만 방향 전환이 쉽고 안정적인 조종이 가능합니다."
+                "둥근 캡슐 형태입니다. "
+                "속도는 조금 느리지만 방향 전환이 쉽고 "
+                "안정적인 조종이 가능합니다."
         },
+
         "장거리 탐사선": {
             "emoji": "🛰️",
             "speed": 4.2,
             "turn": 0.045,
             "stability": 1.25,
             "description":
-                "긴 탐사 장비를 탑재한 우주선입니다. 속도와 조향 반응은 느리지만 안정성이 높습니다."
+                "긴 탐사 장비를 탑재한 우주선입니다. "
+                "속도와 조향 반응은 느리지만 안정성이 높습니다."
         }
     }
 
@@ -272,24 +337,45 @@ elif st.session_state.page == 2:
 
         with cols[i]:
 
+            speed_stars = "★" * max(
+                1,
+                min(5, round(data["speed"] / 1.3))
+            )
+
+            turn_stars = "★" * max(
+                1,
+                min(5, round(data["turn"] * 60))
+            )
+
+            stability_stars = "★" * max(
+                1,
+                min(5, round(data["stability"] * 4))
+            )
+
             st.markdown(
                 f"""
                 <div class="mission-card">
-                    <h2>{data["emoji"]} {name}</h2>
 
-                    <p>{data["description"]}</p>
+                    <h2>
+                        {data["emoji"]} {name}
+                    </h2>
+
+                    <p>
+                        {data["description"]}
+                    </p>
 
                     <span class="stat">
-                        속도 {"★" * round(data["speed"] / 1.3)}
+                        속도 {speed_stars}
                     </span>
 
                     <span class="stat">
-                        조향 {"★" * round(data["turn"] * 100 / 2)}
+                        조향 {turn_stars}
                     </span>
 
                     <span class="stat">
-                        안정성 {"★" * round(data["stability"] * 4)}
+                        안정성 {stability_stars}
                     </span>
+
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -299,29 +385,42 @@ elif st.session_state.page == 2:
                 f"{data['emoji']} {name} 선택",
                 key=f"ship_{name}"
             ):
+
                 st.session_state.ship = name
                 st.session_state.page = 3
+
                 st.rerun()
 
     st.markdown(
         """
         <div class="info-box">
+
         💡 <b>공학적 설계 원리</b><br>
-        우주선의 형태는 단순한 외관이 아니라 속도, 방향 전환, 안정성에 영향을 줍니다.
+
+        우주선의 형태는 단순한 외관이 아니라
+        속도, 방향 전환, 안정성에 영향을 줍니다.
+
         따라서 모든 우주선이 같은 성능을 가지지 않으며,
         플레이어는 탐사 환경에 맞는 우주선을 선택해야 합니다.
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    if st.button("← 임무 선택으로 돌아가기"):
+    if st.button(
+        "← 임무 선택으로 돌아가기"
+    ):
+
         st.session_state.page = 1
+        st.session_state.mission = None
+        st.session_state.ship = None
+
         st.rerun()
 
 
 # ============================================================
-# PAGE 3
+# PAGE 3 : 게임
 # ============================================================
 
 elif st.session_state.page == 3:
@@ -330,25 +429,33 @@ elif st.session_state.page == 3:
     ship = st.session_state.ship
 
     mission_data = {
+
         "화성": {
+            "emoji": "🔴",
             "mass": 250,
             "target_mass": 500,
             "target_radius": 42,
             "color": "#d84a3a"
         },
+
         "금성": {
+            "emoji": "🟡",
             "mass": 500,
             "target_mass": 700,
             "target_radius": 45,
             "color": "#e8b84a"
         },
+
         "목성": {
+            "emoji": "🟠",
             "mass": 1100,
             "target_mass": 1500,
             "target_radius": 65,
             "color": "#d89a62"
         },
+
         "해왕성": {
+            "emoji": "🔵",
             "mass": 650,
             "target_mass": 900,
             "target_radius": 50,
@@ -357,18 +464,21 @@ elif st.session_state.page == 3:
     }
 
     ship_data = {
+
         "노즈형 탐사선": {
             "speed": 6.5,
             "turn": 0.055,
             "stability": 0.75,
             "symbol": "🚀"
         },
+
         "캡슐형 탐사선": {
             "speed": 5.0,
             "turn": 0.085,
             "stability": 1.0,
             "symbol": "🛸"
         },
+
         "장거리 탐사선": {
             "speed": 4.2,
             "turn": 0.045,
@@ -380,29 +490,43 @@ elif st.session_state.page == 3:
     md = mission_data[mission]
     sd = ship_data[ship]
 
-    # JavaScript에서 사용할 값
     game_data = {
+
         "mission": mission,
+
         "ship": ship,
+
         "planetMass": md["mass"],
+
         "targetMass": md["target_mass"],
+
         "targetRadius": md["target_radius"],
+
         "targetColor": md["color"],
+
+        "targetEmoji": md["emoji"],
+
         "speed": sd["speed"],
+
         "turnSpeed": sd["turn"],
+
         "stability": sd["stability"],
+
         "shipSymbol": sd["symbol"]
     }
 
-    import json
+    data_json = json.dumps(
+        game_data,
+        ensure_ascii=False
+    )
 
-    data_json = json.dumps(game_data, ensure_ascii=False)
+    # ========================================================
+    # 중요:
+    # Python f-string과 JavaScript 충돌을 막기 위해
+    # JavaScript 부분은 전부 format() 방식으로 삽입한다.
+    # ========================================================
 
-    # --------------------------------------------------------
-    # 실제 게임
-    # --------------------------------------------------------
-
-    game_html = f"""
+    game_html = r"""
 <!DOCTYPE html>
 
 <html lang="ko">
@@ -413,201 +537,282 @@ elif st.session_state.page == 3:
 
 <style>
 
-* {{
+* {
     box-sizing: border-box;
-}}
+}
 
-body {{
+body {
     margin: 0;
     padding: 0;
     background: #02040d;
     color: white;
     font-family: Arial, sans-serif;
     overflow: hidden;
-}}
+}
 
-#gameWrapper {{
+#gameWrapper {
     width: 100%;
     max-width: 1200px;
     margin: auto;
-}}
+}
 
-#topBar {{
+#topBar {
     height: 75px;
+
     background:
         linear-gradient(
             90deg,
             rgba(8,15,38,0.98),
             rgba(12,25,60,0.95)
         );
-    border: 1px solid #26355f;
-    border-radius: 15px 15px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 22px;
-}}
 
-#gameTitle {{
+    border: 1px solid #26355f;
+
+    border-radius: 15px 15px 0 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 22px;
+}
+
+#gameTitle {
     font-size: 23px;
     font-weight: bold;
     color: #8be9fd;
-}}
+}
 
-#missionInfo {{
+#missionInfo {
     font-size: 14px;
     color: #cbd5e1;
-}}
+}
 
-#gameContainer {{
+#gameContainer {
     position: relative;
+
     width: 100%;
+
     height: 650px;
+
     overflow: hidden;
+
     border-left: 1px solid #26355f;
     border-right: 1px solid #26355f;
     border-bottom: 1px solid #26355f;
+
     background:
         radial-gradient(
             circle at 30% 40%,
             rgba(47,72,150,0.16),
             transparent 25%
         ),
+
         radial-gradient(
             circle at 70% 70%,
             rgba(88,28,135,0.12),
             transparent 25%
         ),
-        #030617;
-}}
 
-canvas {{
+        #030617;
+}
+
+canvas {
     position: absolute;
+
     left: 0;
     top: 0;
+
     width: 100%;
     height: 100%;
-}}
+}
 
-#hud {{
+#hud {
     position: absolute;
+
     top: 15px;
     left: 15px;
+
     z-index: 5;
+
     background: rgba(3,7,22,0.78);
+
     border: 1px solid rgba(96,165,250,0.35);
+
     border-radius: 12px;
+
     padding: 12px 15px;
-    min-width: 205px;
+
+    min-width: 215px;
+
     backdrop-filter: blur(5px);
-}}
+}
 
-.hudTitle {{
+.hudTitle {
     font-weight: bold;
+
     color: #67e8f9;
+
     margin-bottom: 8px;
-}}
+}
 
-.hudRow {{
+.hudRow {
     font-size: 13px;
-    color: #dbeafe;
-    margin: 5px 0;
-}}
 
-#controls {{
+    color: #dbeafe;
+
+    margin: 5px 0;
+}
+
+#controls {
     position: absolute;
+
     bottom: 15px;
     left: 15px;
+
     z-index: 5;
+
     background: rgba(3,7,22,0.78);
+
     border: 1px solid rgba(96,165,250,0.35);
+
     border-radius: 12px;
+
     padding: 10px 15px;
+
     color: #cbd5e1;
+
     font-size: 13px;
-}}
+}
 
-.key {{
+.key {
     display: inline-block;
+
     background: #111827;
+
     border: 1px solid #64748b;
+
     border-radius: 5px;
+
     padding: 2px 7px;
+
     margin: 0 2px;
+
     color: white;
+
     font-weight: bold;
-}}
+}
 
-#message {{
-    display: none;
+#destination {
     position: absolute;
-    z-index: 20;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: min(500px, 90%);
-    text-align: center;
-    background: rgba(3,7,22,0.96);
-    border: 1px solid #38bdf8;
-    border-radius: 20px;
-    padding: 35px;
-    box-shadow:
-        0 0 40px rgba(56,189,248,0.2);
-}}
 
-#message h1 {{
-    font-size: 38px;
-    margin: 0 0 12px 0;
-}}
-
-#message p {{
-    color: #cbd5e1;
-    line-height: 1.6;
-}}
-
-.buttonRow {{
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 20px;
-}}
-
-.gameButton {{
-    border: 1px solid #38bdf8;
-    background: linear-gradient(135deg,#0c4a6e,#172554);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 14px;
-}}
-
-.gameButton:hover {{
-    background: #075985;
-    box-shadow: 0 0 15px rgba(56,189,248,0.35);
-}}
-
-#destination {{
-    position: absolute;
     right: 25px;
     top: 20px;
+
     z-index: 5;
+
     background: rgba(3,7,22,0.78);
+
     border: 1px solid rgba(251,191,36,0.4);
+
     border-radius: 12px;
+
     padding: 10px 15px;
+
     text-align: center;
-}}
+}
 
-#destination .big {{
+#destination .big {
     font-size: 25px;
-}}
+}
 
-#destination .small {{
+#destination .small {
     font-size: 12px;
+
     color: #cbd5e1;
-}}
+}
+
+#message {
+    display: none;
+
+    position: absolute;
+
+    z-index: 20;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: min(500px, 90%);
+
+    text-align: center;
+
+    background: rgba(3,7,22,0.97);
+
+    border: 1px solid #38bdf8;
+
+    border-radius: 20px;
+
+    padding: 35px;
+
+    box-shadow:
+        0 0 40px rgba(56,189,248,0.2);
+}
+
+#message h1 {
+    font-size: 38px;
+
+    margin: 0 0 12px 0;
+}
+
+#message p {
+    color: #cbd5e1;
+
+    line-height: 1.6;
+}
+
+.buttonRow {
+    display: flex;
+
+    gap: 12px;
+
+    justify-content: center;
+
+    margin-top: 20px;
+}
+
+.gameButton {
+    border: 1px solid #38bdf8;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0c4a6e,
+            #172554
+        );
+
+    color: white;
+
+    padding: 12px 20px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+
+    font-size: 14px;
+}
+
+.gameButton:hover {
+    background: #075985;
+
+    box-shadow:
+        0 0 15px rgba(56,189,248,0.35);
+}
 
 </style>
 
@@ -625,7 +830,7 @@ canvas {{
         </div>
 
         <div id="missionInfo">
-            목표 : {mission}　|　우주선 : {ship}
+            목표 : __MISSION__　|　우주선 : __SHIP__
         </div>
 
     </div>
@@ -668,11 +873,11 @@ canvas {{
         <div id="destination">
 
             <div class="big">
-                {md["emoji"] if "emoji" in md else "🪐"}
+                __EMOJI__
             </div>
 
             <div class="small">
-                TARGET : {mission}
+                TARGET : __MISSION__
             </div>
 
         </div>
@@ -724,10 +929,13 @@ canvas {{
 
 <script>
 
-const GAME = {data_json};
+const GAME = __GAME_DATA__;
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas =
+    document.getElementById("gameCanvas");
+
+const ctx =
+    canvas.getContext("2d");
 
 let W = 0;
 let H = 0;
@@ -735,107 +943,121 @@ let H = 0;
 let animationId = null;
 
 let gameOver = false;
+
 let missionComplete = false;
 
-let keys = {{}};
+let keys = {};
 
 let stars = [];
+
 let planets = [];
 
 
-// ----------------------------------------------------------
-// 화면 크기
-// ----------------------------------------------------------
+function resizeCanvas() {
 
-function resizeCanvas() {{
-
-    const rect = canvas.getBoundingClientRect();
+    const rect =
+        canvas.getBoundingClientRect();
 
     W = rect.width;
+
     H = rect.height;
 
-    canvas.width = W * window.devicePixelRatio;
-    canvas.height = H * window.devicePixelRatio;
+    const ratio =
+        window.devicePixelRatio || 1;
+
+    canvas.width =
+        W * ratio;
+
+    canvas.height =
+        H * ratio;
 
     ctx.setTransform(
-        window.devicePixelRatio,
+        ratio,
         0,
         0,
-        window.devicePixelRatio,
+        ratio,
         0,
         0
     );
-}}
-
-window.addEventListener("resize", resizeCanvas);
+}
 
 
-// ----------------------------------------------------------
-// 랜덤
-// ----------------------------------------------------------
-
-function rand(min, max) {{
-    return Math.random() * (max - min) + min;
-}}
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
 
 
-// ----------------------------------------------------------
-// 별 생성
-// ----------------------------------------------------------
+function rand(min, max) {
 
-function createStars() {{
+    return Math.random() *
+        (max - min) +
+        min;
+}
+
+
+function createStars() {
 
     stars = [];
 
-    for (let i = 0; i < 180; i++) {{
+    for (let i = 0; i < 180; i++) {
 
-        stars.push({{
+        stars.push({
             x: rand(0, W),
             y: rand(0, H),
             r: rand(0.4, 1.8),
             alpha: rand(0.25, 1)
-        }});
+        });
 
-    }}
-}}
+    }
+}
 
 
-// ----------------------------------------------------------
-// 행성 생성
-// ----------------------------------------------------------
-
-function createPlanets() {{
+function createPlanets() {
 
     planets = [];
 
-    const count = 8;
+    const count = 9;
 
-    for (let i = 0; i < count; i++) {{
+    for (let i = 0; i < count; i++) {
 
-        let radius = rand(10, 24);
+        const radius =
+            rand(10, 24);
 
-        let orbitRadius = rand(55, 160);
+        const orbitRadius =
+            rand(55, 160);
 
-        let centerX = rand(
-            100,
-            Math.max(101, W - 100)
-        );
+        const centerX =
+            rand(
+                100,
+                Math.max(101, W - 100)
+            );
 
-        let centerY = rand(
-            100,
-            Math.max(101, H - 100)
-        );
+        const centerY =
+            rand(
+                100,
+                Math.max(101, H - 100)
+            );
 
-        planets.push({{
+        planets.push({
 
             centerX: centerX,
+
             centerY: centerY,
 
             orbitRadius: orbitRadius,
 
-            orbitAngle: rand(0, Math.PI * 2),
+            orbitAngle:
+                rand(
+                    0,
+                    Math.PI * 2
+                ),
 
-            orbitSpeed: rand(-0.009, 0.009),
+            orbitSpeed:
+                rand(
+                    -0.009,
+                    0.009
+                ),
 
             radius: radius,
 
@@ -849,53 +1071,51 @@ function createPlanets() {{
                 "#f59e0b",
                 "#f87171",
                 "#34d399"
-            ][Math.floor(rand(0,7))]
+            ][
+                Math.floor(
+                    rand(0, 7)
+                )
+            ]
 
-        }});
+        });
 
-    }}
-}}
+    }
+}
 
 
-// ----------------------------------------------------------
-// 목표 행성
-// ----------------------------------------------------------
-
-let target = {{
+let target = {
 
     x: 0,
+
     y: 0,
+
     radius: GAME.targetRadius,
+
     mass: GAME.targetMass,
+
     color: GAME.targetColor
 
-}};
+};
 
 
-// ----------------------------------------------------------
-// 우주선
-// ----------------------------------------------------------
-
-let ship = {{
+let ship = {
 
     x: 0,
+
     y: 0,
 
     vx: 0,
+
     vy: 0,
 
-    angle: -0.15,
+    angle: 0,
 
     radius: 10
 
-}};
+};
 
 
-// ----------------------------------------------------------
-// 게임 초기화
-// ----------------------------------------------------------
-
-function initGame() {{
+function initGame() {
 
     resizeCanvas();
 
@@ -904,11 +1124,15 @@ function initGame() {{
     createPlanets();
 
     gameOver = false;
+
     missionComplete = false;
 
-    document.getElementById("message").style.display = "none";
+    document.getElementById(
+        "message"
+    ).style.display = "none";
 
     ship.x = 80;
+
     ship.y = H / 2;
 
     ship.angle = 0;
@@ -921,224 +1145,297 @@ function initGame() {{
         Math.sin(ship.angle) *
         GAME.speed;
 
+    target.x =
+        W - 100;
 
-    target.x = W - 100;
-    target.y = H / 2;
+    target.y =
+        H / 2;
 
-
-    // 목표 행성 주변에도 작은 행성들이 너무 겹치지 않게 조정
-    planets.forEach((p, i) => {{
+    planets.forEach(function(p) {
 
         if (
-            Math.abs(p.centerX - target.x) < 150 &&
-            Math.abs(p.centerY - target.y) < 150
-        ) {{
+            Math.abs(
+                p.centerX -
+                target.x
+            ) < 150
+            &&
+            Math.abs(
+                p.centerY -
+                target.y
+            ) < 150
+        ) {
+
             p.centerX -= 180;
-        }}
 
-    }});
+        }
 
+    });
 
-    cancelAnimationFrame(animationId);
+    cancelAnimationFrame(
+        animationId
+    );
 
     gameLoop();
-}}
+}
 
 
-// ----------------------------------------------------------
-// 키보드
-// ----------------------------------------------------------
+window.addEventListener(
+    "keydown",
+    function(e) {
 
-window.addEventListener("keydown", function(e) {{
+        if (
+            e.key === "ArrowUp" ||
+            e.key === "ArrowDown" ||
+            e.key === "ArrowLeft" ||
+            e.key === "ArrowRight"
+        ) {
 
-    if (
-        e.key === "ArrowUp" ||
-        e.key === "ArrowDown" ||
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight"
-    ) {{
-        e.preventDefault();
-        keys[e.key] = true;
-    }}
+            e.preventDefault();
 
-}});
+            keys[e.key] = true;
 
+        }
 
-window.addEventListener("keyup", function(e) {{
-
-    keys[e.key] = false;
-
-}});
+    }
+);
 
 
-// ----------------------------------------------------------
-// 행성 공전
-// ----------------------------------------------------------
+window.addEventListener(
+    "keyup",
+    function(e) {
 
-function updatePlanets() {{
+        keys[e.key] = false;
 
-    planets.forEach(p => {{
+    }
+);
 
-        p.orbitAngle += p.orbitSpeed;
+
+function updatePlanets() {
+
+    planets.forEach(function(p) {
+
+        p.orbitAngle +=
+            p.orbitSpeed;
 
         p.x =
             p.centerX +
-            Math.cos(p.orbitAngle) *
+            Math.cos(
+                p.orbitAngle
+            ) *
             p.orbitRadius;
 
         p.y =
             p.centerY +
-            Math.sin(p.orbitAngle) *
+            Math.sin(
+                p.orbitAngle
+            ) *
             p.orbitRadius;
 
-    }});
+    });
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 거리 계산
-// ----------------------------------------------------------
-
-function distance(x1, y1, x2, y2) {{
+function distance(
+    x1,
+    y1,
+    x2,
+    y2
+) {
 
     return Math.sqrt(
-        (x2-x1)*(x2-x1) +
-        (y2-y1)*(y2-y1)
+        (x2 - x1) *
+        (x2 - x1)
+        +
+        (y2 - y1) *
+        (y2 - y1)
     );
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 중력 계산
-// ----------------------------------------------------------
-
-function applyGravity() {{
+function applyGravity() {
 
     let totalGravity = 0;
 
-    planets.forEach(p => {{
+    planets.forEach(function(p) {
 
-        const dx = p.x - ship.x;
-        const dy = p.y - ship.y;
+        const dx =
+            p.x - ship.x;
 
-        const dist = Math.sqrt(dx*dx + dy*dy);
+        const dy =
+            p.y - ship.y;
 
-        if (dist < 280) {{
+        const dist =
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+        if (dist < 280) {
 
             const safeDistance =
-                Math.max(dist, 35);
+                Math.max(
+                    dist,
+                    35
+                );
 
             const force =
                 p.mass /
-                (safeDistance * safeDistance);
+                (
+                    safeDistance *
+                    safeDistance
+                );
 
             const acceleration =
-                force * 0.55 *
+                force *
+                0.55 *
                 GAME.stability;
 
             ship.vx +=
-                (dx / safeDistance) *
+                (
+                    dx /
+                    safeDistance
+                ) *
                 acceleration;
 
             ship.vy +=
-                (dy / safeDistance) *
+                (
+                    dy /
+                    safeDistance
+                ) *
                 acceleration;
 
-            totalGravity += force;
+            totalGravity +=
+                force;
 
-        }}
+        }
 
-    }});
+    });
 
 
-    // 목표 행성의 중력
-    const dx = target.x - ship.x;
-    const dy = target.y - ship.y;
+    const dx =
+        target.x - ship.x;
 
-    const dist = Math.sqrt(dx*dx + dy*dy);
+    const dy =
+        target.y - ship.y;
 
-    if (dist < 320) {{
+    const dist =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (dist < 320) {
 
         const safeDistance =
-            Math.max(dist, 45);
+            Math.max(
+                dist,
+                45
+            );
 
         const force =
             target.mass /
-            (safeDistance * safeDistance);
+            (
+                safeDistance *
+                safeDistance
+            );
 
         const acceleration =
-            force * 0.38 *
+            force *
+            0.38 *
             GAME.stability;
 
         ship.vx +=
-            (dx / safeDistance) *
+            (
+                dx /
+                safeDistance
+            ) *
             acceleration;
 
         ship.vy +=
-            (dy / safeDistance) *
+            (
+                dy /
+                safeDistance
+            ) *
             acceleration;
 
-        totalGravity += force;
+        totalGravity +=
+            force;
 
-    }}
+    }
 
-    document.getElementById("gravityText").textContent =
+
+    document.getElementById(
+        "gravityText"
+    ).textContent =
         totalGravity.toFixed(3);
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 우주선 조종
-// ----------------------------------------------------------
+function controlShip() {
 
-function controlShip() {{
+    if (keys["ArrowLeft"]) {
 
-    if (keys["ArrowLeft"]) {{
-        ship.angle -= GAME.turnSpeed;
-    }}
+        ship.angle -=
+            GAME.turnSpeed;
 
-    if (keys["ArrowRight"]) {{
-        ship.angle += GAME.turnSpeed;
-    }}
+    }
 
 
-    // ↑는 현재 방향으로 속도를 조금 증가
-    if (keys["ArrowUp"]) {{
+    if (keys["ArrowRight"]) {
+
+        ship.angle +=
+            GAME.turnSpeed;
+
+    }
+
+
+    if (keys["ArrowUp"]) {
 
         ship.vx +=
-            Math.cos(ship.angle) *
+            Math.cos(
+                ship.angle
+            ) *
             0.06;
 
         ship.vy +=
-            Math.sin(ship.angle) *
+            Math.sin(
+                ship.angle
+            ) *
             0.06;
 
-    }}
+    }
 
 
-    // ↓는 반대 방향으로 아주 약하게 조정
-    if (keys["ArrowDown"]) {{
+    if (keys["ArrowDown"]) {
 
         ship.vx -=
-            Math.cos(ship.angle) *
+            Math.cos(
+                ship.angle
+            ) *
             0.035;
 
         ship.vy -=
-            Math.sin(ship.angle) *
+            Math.sin(
+                ship.angle
+            ) *
             0.035;
 
-    }}
+    }
 
 
-    // 속도 크기 제한
     let velocity =
         Math.sqrt(
-            ship.vx * ship.vx +
-            ship.vy * ship.vy
+            ship.vx *
+            ship.vx
+            +
+            ship.vy *
+            ship.vy
         );
+
 
     const maxSpeed =
         GAME.speed * 1.45;
@@ -1147,64 +1444,88 @@ function controlShip() {{
         GAME.speed * 0.65;
 
 
-    if (velocity > maxSpeed) {{
+    if (
+        velocity >
+        maxSpeed
+    ) {
 
         ship.vx =
-            ship.vx / velocity *
+            ship.vx /
+            velocity *
             maxSpeed;
 
         ship.vy =
-            ship.vy / velocity *
+            ship.vy /
+            velocity *
             maxSpeed;
 
-    }}
+    }
 
 
-    if (velocity < minSpeed) {{
+    if (
+        velocity <
+        minSpeed
+    ) {
 
         ship.vx =
-            ship.vx / velocity *
+            ship.vx /
+            velocity *
             minSpeed;
 
         ship.vy =
-            ship.vy / velocity *
+            ship.vy /
+            velocity *
             minSpeed;
 
-    }}
+    }
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 우주선 이동
-// ----------------------------------------------------------
-
-function moveShip() {{
+function moveShip() {
 
     ship.x += ship.vx;
+
     ship.y += ship.vy;
 
 
-    // 화면을 넘어가면 반대쪽에서 등장
-    if (ship.x < -20) ship.x = W + 20;
+    if (ship.x < -20) {
 
-    if (ship.x > W + 20) ship.x = -20;
+        ship.x =
+            W + 20;
 
-    if (ship.y < -20) ship.y = H + 20;
-
-    if (ship.y > H + 20) ship.y = -20;
-
-}}
+    }
 
 
-// ----------------------------------------------------------
-// 충돌 판정
-// ----------------------------------------------------------
+    if (ship.x > W + 20) {
 
-function checkCollisions() {{
+        ship.x = -20;
 
-    // 작은 행성
-    for (let p of planets) {{
+    }
+
+
+    if (ship.y < -20) {
+
+        ship.y =
+            H + 20;
+
+    }
+
+
+    if (ship.y > H + 20) {
+
+        ship.y = -20;
+
+    }
+
+}
+
+
+function checkCollisions() {
+
+    for (
+        let p of planets
+    ) {
 
         const d =
             distance(
@@ -1216,23 +1537,25 @@ function checkCollisions() {{
 
         if (
             d <
-            ship.radius + p.radius
-        ) {{
+            ship.radius +
+            p.radius
+        ) {
 
             endGame(
                 false,
                 "💥 충돌!",
-                "작은 행성과 충돌했습니다.<br>다른 경로를 선택해 다시 도전하세요."
+                "작은 행성과 충돌했습니다.<br>"
+                +
+                "다른 경로를 선택해 다시 도전하세요."
             );
 
             return;
 
-        }}
+        }
 
-    }}
+    }
 
 
-    // 목표 행성
     const targetDistance =
         distance(
             ship.x,
@@ -1241,10 +1564,12 @@ function checkCollisions() {{
             target.y
         );
 
+
     if (
         targetDistance <
-        ship.radius + target.radius
-    ) {{
+        ship.radius +
+        target.radius
+    ) {
 
         endGame(
             true,
@@ -1252,23 +1577,15 @@ function checkCollisions() {{
             "목표 행성에 성공적으로 도착했습니다!"
         );
 
-    }}
+    }
 
-}}
-
-
-// ----------------------------------------------------------
-// 화면 밖에서 목표 방향으로 계속 이동 가능
-// ----------------------------------------------------------
+}
 
 
-// ----------------------------------------------------------
-// 배경
-// ----------------------------------------------------------
+function drawBackground() {
 
-function drawBackground() {{
-
-    ctx.fillStyle = "#030617";
+    ctx.fillStyle =
+        "#030617";
 
     ctx.fillRect(
         0,
@@ -1278,7 +1595,6 @@ function drawBackground() {{
     );
 
 
-    // 성운 효과
     const gradient =
         ctx.createRadialGradient(
             W * 0.25,
@@ -1288,6 +1604,7 @@ function drawBackground() {{
             H * 0.45,
             300
         );
+
 
     gradient.addColorStop(
         0,
@@ -1299,7 +1616,9 @@ function drawBackground() {{
         "rgba(59,130,246,0)"
     );
 
-    ctx.fillStyle = gradient;
+
+    ctx.fillStyle =
+        gradient;
 
     ctx.fillRect(
         0,
@@ -1309,8 +1628,7 @@ function drawBackground() {{
     );
 
 
-    // 별
-    stars.forEach(s => {{
+    stars.forEach(function(s) {
 
         ctx.beginPath();
 
@@ -1323,20 +1641,20 @@ function drawBackground() {{
         );
 
         ctx.fillStyle =
-            `rgba(255,255,255,${s.alpha})`;
+            "rgba(255,255,255,"
+            +
+            s.alpha
+            +
+            ")";
 
         ctx.fill();
 
-    }});
+    });
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 공전 궤도
-// ----------------------------------------------------------
-
-function drawOrbit(p) {{
+function drawOrbit(p) {
 
     ctx.beginPath();
 
@@ -1355,14 +1673,10 @@ function drawOrbit(p) {{
 
     ctx.stroke();
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 행성
-// ----------------------------------------------------------
-
-function drawPlanet(p) {{
+function drawPlanet(p) {
 
     drawOrbit(p);
 
@@ -1376,6 +1690,7 @@ function drawPlanet(p) {{
             p.y,
             p.radius
         );
+
 
     gradient.addColorStop(
         0,
@@ -1403,12 +1718,12 @@ function drawPlanet(p) {{
         Math.PI * 2
     );
 
-    ctx.fillStyle = gradient;
+    ctx.fillStyle =
+        gradient;
 
     ctx.fill();
 
 
-    // 중력 영향 범위
     ctx.beginPath();
 
     ctx.arc(
@@ -1424,26 +1739,27 @@ function drawPlanet(p) {{
 
     ctx.stroke();
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 목표 행성
-// ----------------------------------------------------------
-
-function drawTarget() {{
+function drawTarget() {
 
     const pulse =
         1 +
-        Math.sin(Date.now() * 0.004) *
+        Math.sin(
+            Date.now() * 0.004
+        ) *
         0.05;
+
 
     ctx.beginPath();
 
     ctx.arc(
         target.x,
         target.y,
-        target.radius * 1.5 * pulse,
+        target.radius *
+        1.5 *
+        pulse,
         0,
         Math.PI * 2
     );
@@ -1458,13 +1774,21 @@ function drawTarget() {{
 
     const gradient =
         ctx.createRadialGradient(
-            target.x - target.radius * 0.35,
-            target.y - target.radius * 0.35,
+            target.x -
+                target.radius *
+                0.35,
+
+            target.y -
+                target.radius *
+                0.35,
+
             3,
+
             target.x,
             target.y,
             target.radius
         );
+
 
     gradient.addColorStop(
         0,
@@ -1492,31 +1816,33 @@ function drawTarget() {{
         Math.PI * 2
     );
 
-    ctx.fillStyle = gradient;
+    ctx.fillStyle =
+        gradient;
 
     ctx.fill();
 
 
-    ctx.fillStyle = "#fef3c7";
+    ctx.fillStyle =
+        "#fef3c7";
 
-    ctx.font = "bold 14px Arial";
+    ctx.font =
+        "bold 14px Arial";
 
-    ctx.textAlign = "center";
+    ctx.textAlign =
+        "center";
 
     ctx.fillText(
-        "{mission}",
+        GAME.mission,
         target.x,
-        target.y + target.radius + 25
+        target.y +
+        target.radius +
+        25
     );
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 우주선
-// ----------------------------------------------------------
-
-function drawShip() {{
+function drawShip() {
 
     ctx.save();
 
@@ -1525,7 +1851,9 @@ function drawShip() {{
         ship.y
     );
 
-    ctx.rotate(ship.angle);
+    ctx.rotate(
+        ship.angle
+    );
 
 
     // 엔진 불꽃
@@ -1559,7 +1887,7 @@ function drawShip() {{
     ctx.fill();
 
 
-    // 우주선
+    // 우주선 본체
     ctx.beginPath();
 
     ctx.moveTo(
@@ -1584,6 +1912,7 @@ function drawShip() {{
 
     ctx.closePath();
 
+
     const gradient =
         ctx.createLinearGradient(
             -ship.radius,
@@ -1591,6 +1920,7 @@ function drawShip() {{
             ship.radius,
             0
         );
+
 
     gradient.addColorStop(
         0,
@@ -1607,36 +1937,45 @@ function drawShip() {{
         "#38bdf8"
     );
 
-    ctx.fillStyle = gradient;
+
+    ctx.fillStyle =
+        gradient;
 
     ctx.fill();
 
 
     ctx.restore();
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// HUD
-// ----------------------------------------------------------
-
-function updateHUD() {{
+function updateHUD() {
 
     const velocity =
         Math.sqrt(
-            ship.vx * ship.vx +
-            ship.vy * ship.vy
+            ship.vx *
+            ship.vx
+            +
+            ship.vy *
+            ship.vy
         );
+
 
     let angleDegrees =
         ship.angle *
         180 /
         Math.PI;
 
-    if (angleDegrees < 0) {{
-        angleDegrees += 360;
-    }}
+
+    if (
+        angleDegrees < 0
+    ) {
+
+        angleDegrees +=
+            360;
+
+    }
+
 
     const d =
         distance(
@@ -1652,87 +1991,104 @@ function updateHUD() {{
     ).textContent =
         velocity.toFixed(2);
 
+
     document.getElementById(
         "angleText"
     ).textContent =
         angleDegrees.toFixed(0);
+
 
     document.getElementById(
         "distanceText"
     ).textContent =
         d.toFixed(0);
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 게임 종료
-// ----------------------------------------------------------
+function endGame(
+    success,
+    title,
+    text
+) {
 
-function endGame(success, title, text) {{
+    if (
+        gameOver ||
+        missionComplete
+    ) {
 
-    if (gameOver || missionComplete) {{
         return;
-    }}
 
-    if (success) {{
-        missionComplete = true;
-    }} else {{
-        gameOver = true;
-    }}
+    }
 
-    cancelAnimationFrame(animationId);
+
+    if (success) {
+
+        missionComplete =
+            true;
+
+    } else {
+
+        gameOver =
+            true;
+
+    }
+
+
+    cancelAnimationFrame(
+        animationId
+    );
+
 
     document.getElementById(
         "messageTitle"
-    ).textContent = title;
+    ).textContent =
+        title;
+
 
     document.getElementById(
         "messageText"
-    ).innerHTML = text;
+    ).innerHTML =
+        text;
+
 
     document.getElementById(
         "message"
-    ).style.display = "block";
+    ).style.display =
+        "block";
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 다시하기
-// ----------------------------------------------------------
+function restartGame() {
 
-function restartGame() {{
     initGame();
-}}
+
+}
 
 
-// ----------------------------------------------------------
-// 처음으로
-// ----------------------------------------------------------
+function goHome() {
 
-function goHome() {{
-
-    // Streamlit 앱으로 신호 전달
     window.parent.postMessage(
-        {{
+        {
             type: "ORBIT_HOME"
-        }},
+        },
         "*"
     );
 
-}}
+}
 
 
-// ----------------------------------------------------------
-// 게임 루프
-// ----------------------------------------------------------
+function gameLoop() {
 
-function gameLoop() {{
+    if (
+        gameOver ||
+        missionComplete
+    ) {
 
-    if (gameOver || missionComplete) {{
         return;
-    }}
+
+    }
 
 
     updatePlanets();
@@ -1744,7 +2100,6 @@ function gameLoop() {{
     moveShip();
 
     checkCollisions();
-
 
     drawBackground();
 
@@ -1764,12 +2119,8 @@ function gameLoop() {{
             gameLoop
         );
 
-}}
+}
 
-
-// ----------------------------------------------------------
-// 시작
-// ----------------------------------------------------------
 
 initGame();
 
@@ -1780,16 +2131,49 @@ initGame();
 </html>
 """
 
+    # --------------------------------------------------------
+    # Python 값 삽입
+    # --------------------------------------------------------
+
+    game_html = game_html.replace(
+        "__MISSION__",
+        mission
+    )
+
+    game_html = game_html.replace(
+        "__SHIP__",
+        ship
+    )
+
+    game_html = game_html.replace(
+        "__EMOJI__",
+        md["emoji"]
+    )
+
+    game_html = game_html.replace(
+        "__GAME_DATA__",
+        data_json
+    )
+
+    # --------------------------------------------------------
+    # 게임 표시
+    # --------------------------------------------------------
+
     components.html(
         game_html,
         height=750,
         scrolling=False
     )
 
-    # Streamlit 쪽 처음으로 버튼
+    # --------------------------------------------------------
+    # Streamlit 바깥쪽 복귀 버튼
+    # --------------------------------------------------------
+
     st.markdown("---")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns(
+        [1, 2, 1]
+    )
 
     with col2:
 
@@ -1797,7 +2181,11 @@ initGame();
             "🏠 임무 선택 화면으로 돌아가기",
             key="back_to_mission"
         ):
+
             st.session_state.page = 1
+
             st.session_state.mission = None
+
             st.session_state.ship = None
+
             st.rerun()
