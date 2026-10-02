@@ -1,5 +1,6 @@
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="SWINGBY OVER",
@@ -8,343 +9,260 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# 전체 화면 클릭 후 다음 페이지로 이동
+if st.query_params.get("start") == "1":
+    st.query_params.clear()
+    st.switch_page("pages/1_행성_선택.py")
+
+# 불필요한 Streamlit UI 숨기기
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Noto+Sans+KR:wght@400;600;800&display=swap');
-
-.stApp {
-    background:
-        radial-gradient(ellipse at 20% 20%, #17244c 0%, transparent 35%),
-        radial-gradient(ellipse at 80% 70%, #32104b 0%, transparent 35%),
-        linear-gradient(145deg, #030611, #080a1d 55%, #10051d);
-    color: #edf6ff;
-    font-family: 'Noto Sans KR', sans-serif;
-}
-
-#MainMenu,
-footer,
-header {
-    visibility: hidden;
-}
-
+#MainMenu, footer, header,
 [data-testid="stSidebar"] {
-    display: none;
+    display: none !important;
 }
-
 .block-container {
-    max-width: 100%;
-    padding: 1rem 1rem 0;
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+iframe {
+    border: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# HTML과 CSS를 별도의 프레임에서 렌더링
+components.html("""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* {
+    box-sizing: border-box;
 }
 
-.hero {
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #030611;
+}
+
+.scene {
     position: relative;
-    min-height: calc(100vh - 2rem);
+    width: 100%;
+    height: 100vh;
+    min-height: 550px;
+    overflow: hidden;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    border: 1px solid rgba(91, 210, 255, .20);
-    border-radius: 22px;
+    flex-direction: column;
+    cursor: pointer;
     background:
-        radial-gradient(
-            circle at 50% 48%,
-            rgba(37, 58, 125, .28),
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 80% 30%,
-            rgba(135, 33, 188, .18),
-            transparent 25%
-        ),
-        linear-gradient(
-            180deg,
-            rgba(2, 5, 18, .7),
-            rgba(4, 6, 22, .92)
-        );
-    box-shadow: inset 0 0 80px rgba(35, 106, 255, .08);
+        radial-gradient(ellipse at 50% 48%,
+            rgba(38, 60, 135, .34), transparent 30%),
+        radial-gradient(ellipse at 80% 25%,
+            rgba(114, 35, 160, .20), transparent 35%),
+        linear-gradient(145deg, #030611, #080a1d 55%, #10051d);
 }
 
-.hero:before {
+.scene::before {
     content: "";
     position: absolute;
     inset: 0;
-    background-image:
-        radial-gradient(
-            1px 1px at 10% 20%,
-            white 99%,
-            transparent
-        ),
-        radial-gradient(
-            2px 2px at 20% 70%,
-            #78eaff 99%,
-            transparent
-        ),
-        radial-gradient(
-            1px 1px at 35% 32%,
-            white 99%,
-            transparent
-        ),
-        radial-gradient(
-            2px 2px at 70% 20%,
-            #d5a2ff 99%,
-            transparent
-        ),
-        radial-gradient(
-            1px 1px at 90% 60%,
-            white 99%,
-            transparent
-        ),
-        radial-gradient(
-            1px 1px at 55% 85%,
-            white 99%,
-            transparent
-        ),
-        radial-gradient(
-            2px 2px at 45% 12%,
-            #80aaff 99%,
-            transparent
-        );
-    background-size: 300px 230px;
-    opacity: .85;
     pointer-events: none;
+    background-image:
+        radial-gradient(2px 2px at 10% 20%, #ffffff 99%, transparent),
+        radial-gradient(2px 2px at 30% 70%, #65e9ff 99%, transparent),
+        radial-gradient(2px 2px at 75% 25%, #d6a0ff 99%, transparent),
+        radial-gradient(1px 1px at 90% 60%, #ffffff 99%, transparent),
+        radial-gradient(1px 1px at 45% 15%, #ffffff 99%, transparent),
+        radial-gradient(2px 2px at 65% 85%, #72aaff 99%, transparent);
+    background-size: 220px 190px;
+    animation: stars 18s linear infinite;
+}
+
+@keyframes stars {
+    from { background-position: 0 0; }
+    to { background-position: 220px 190px; }
 }
 
 .orbit {
     position: absolute;
-    width: 310px;
-    height: 310px;
-    border: 1px solid rgba(83, 218, 255, .23);
+    width: min(42vw, 390px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(81, 210, 255, .28);
     border-radius: 50%;
-    box-shadow: 0 0 35px rgba(60, 119, 255, .08);
+    box-shadow: 0 0 35px rgba(43, 118, 255, .08);
     pointer-events: none;
 }
 
-.orbit.two {
-    width: 390px;
-    height: 390px;
-    border-color: rgba(195, 81, 255, .17);
+.orbit.outer {
+    width: min(54vw, 500px);
+    border-color: rgba(173, 91, 255, .19);
 }
 
 .sun {
-    width: 120px;
-    height: 120px;
+    position: relative;
+    width: clamp(75px, 10vw, 120px);
+    aspect-ratio: 1;
     border-radius: 50%;
-    background:
-        radial-gradient(
-            circle at 35% 30%,
-            #f7fcff,
-            #71eaff 28%,
-            #4a54d8 62%,
-            #a327ff 85%
-        );
+    background: radial-gradient(
+        circle at 35% 28%,
+        #ffffff 0%,
+        #8ef2ff 20%,
+        #4779e8 52%,
+        #a02dff 82%
+    );
     box-shadow:
-        0 0 30px #3e9dff,
-        0 0 90px rgba(123, 48, 255, .6);
-    margin-bottom: 25px;
-    pointer-events: none;
+        0 0 24px #49cfff,
+        0 0 70px rgba(82, 71, 255, .65),
+        0 0 120px rgba(167, 38, 255, .23);
+    margin-bottom: 32px;
+    animation: glow 4s ease-in-out infinite;
+    z-index: 2;
 }
 
-.game-title {
-    z-index: 2;
-    text-align: center;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 800;
-    font-size: clamp(2.8rem, 7vw, 6.5rem);
-    letter-spacing: .09em;
-    line-height: 1.1;
+@keyframes glow {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+.title {
+    position: relative;
+    z-index: 3;
     color: #e8fbff;
+    font-size: clamp(45px, 8vw, 100px);
+    font-weight: 900;
+    letter-spacing: .08em;
+    line-height: 1.05;
+    text-align: center;
     text-shadow:
         0 0 8px #56e9ff,
-        0 0 24px #168aff,
+        0 0 25px #168aff,
         0 0 55px #812dff;
-    pointer-events: none;
+    user-select: none;
 }
 
-.game-subtitle {
-    z-index: 2;
-    margin-top: 22px;
+.subtitle {
+    position: relative;
+    z-index: 3;
+    margin-top: 24px;
     color: #a7bbdf;
-    letter-spacing: .28em;
-    font-size: .85rem;
+    font-size: clamp(10px, 1.3vw, 15px);
+    letter-spacing: .25em;
     text-align: center;
-    pointer-events: none;
-}
-
-.shooting {
-    position: absolute;
-    width: 130px;
-    height: 2px;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        #4ceaff,
-        white
-    );
-    box-shadow: 0 0 12px #46dfff;
-    transform: rotate(-38deg);
-    animation: shoot 3.6s linear infinite;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.s1 {
-    top: 18%;
-    left: 8%;
-    animation-delay: 0s;
-}
-
-.s2 {
-    top: 35%;
-    left: 72%;
-    animation-delay: 1.2s;
-}
-
-.s3 {
-    top: 65%;
-    left: 20%;
-    animation-delay: 2.1s;
-}
-
-.s4 {
-    top: 12%;
-    left: 85%;
-    animation-delay: 2.7s;
-}
-
-@keyframes shoot {
-    0% {
-        transform: translate(0, 0) rotate(-38deg);
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 1;
-    }
-
-    65% {
-        opacity: .9;
-    }
-
-    100% {
-        transform: translate(-240px, 180px) rotate(-38deg);
-        opacity: 0;
-    }
+    user-select: none;
 }
 
 .hint {
-    z-index: 2;
-    margin-top: 48px;
+    position: relative;
+    z-index: 3;
+    margin-top: 55px;
     color: #d9faff;
-    font-family: 'Orbitron', sans-serif;
-    font-size: .9rem;
+    font-size: 12px;
     letter-spacing: .22em;
     animation: pulse 1.7s ease-in-out infinite;
-    pointer-events: none;
+    user-select: none;
 }
 
 @keyframes pulse {
-    0%, 100% {
-        opacity: .5;
-    }
-
+    0%, 100% { opacity: .45; }
     50% {
         opacity: 1;
         text-shadow: 0 0 12px #43dfff;
     }
 }
 
-/* 투명한 전체 화면 클릭 영역 */
-div[data-testid="stButton"] {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 999999 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
+.shooting {
+    position: absolute;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(
+        90deg, transparent, #4ceaff, #ffffff
+    );
+    box-shadow: 0 0 12px #46dfff;
+    transform: rotate(-38deg);
+    opacity: 0;
+    pointer-events: none;
+    animation: shoot 4s linear infinite;
 }
 
-div[data-testid="stButton"] button {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100vh !important;
-    opacity: 0 !important;
-    cursor: pointer !important;
-    border: none !important;
-    background: transparent !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+.s1 { top: 18%; left: 12%; animation-delay: 0s; }
+.s2 { top: 30%; left: 76%; animation-delay: 1.1s; }
+.s3 { top: 65%; left: 28%; animation-delay: 2.2s; }
+.s4 { top: 12%; left: 88%; animation-delay: 2.9s; }
+
+@keyframes shoot {
+    0% {
+        transform: translate(0, 0) rotate(-38deg);
+        opacity: 0;
+    }
+    12% { opacity: 1; }
+    65% { opacity: .8; }
+    100% {
+        transform: translate(-260px, 190px) rotate(-38deg);
+        opacity: 0;
+    }
 }
 
-/* 클릭 영역의 텍스트를 화면에 표시하지 않음 */
-div[data-testid="stButton"] button p {
-    color: transparent !important;
+.corner {
+    position: absolute;
+    z-index: 3;
+    color: rgba(138, 177, 221, .55);
+    font-size: 10px;
+    letter-spacing: .15em;
+    user-select: none;
 }
 
-/* 작은 화면 최적화 */
+.top-left { top: 22px; left: 25px; }
+.top-right { top: 22px; right: 25px; }
+.bottom-left { bottom: 22px; left: 25px; }
+.bottom-right { bottom: 22px; right: 25px; }
+
 @media (max-width: 600px) {
-    .hero {
-        min-height: calc(100vh - 2rem);
-    }
-
-    .sun {
-        width: 85px;
-        height: 85px;
-    }
-
-    .orbit {
-        width: 240px;
-        height: 240px;
-    }
-
-    .orbit.two {
-        width: 300px;
-        height: 300px;
-    }
-
-    .game-subtitle {
-        font-size: .65rem;
-        letter-spacing: .12em;
-    }
-
-    .hint {
-        font-size: .72rem;
-        letter-spacing: .12em;
-    }
+    .subtitle { letter-spacing: .12em; }
+    .hint { letter-spacing: .12em; }
 }
 </style>
-
-<div class="hero">
+</head>
+<body>
+<div class="scene" id="scene">
     <div class="orbit"></div>
-    <div class="orbit two"></div>
-
-    <div class="sun"></div>
+    <div class="orbit outer"></div>
 
     <div class="shooting s1"></div>
     <div class="shooting s2"></div>
     <div class="shooting s3"></div>
     <div class="shooting s4"></div>
 
-    <div class="game-title">
-        SWINGBY<br>OVER
-    </div>
+    <div class="sun"></div>
 
-    <div class="game-subtitle">
+    <div class="title">SWINGBY<br>OVER</div>
+
+    <div class="subtitle">
         GRAVITY IS YOUR ENGINE
     </div>
 
     <div class="hint">
-        ▼ &nbsp; CLICK ANYWHERE TO START &nbsp; ▼
+        CLICK ANYWHERE TO START
     </div>
-</div>
-""", unsafe_allow_html=True)
 
-# 화면 전체를 덮는 투명한 클릭 영역
-if st.button(
-    "CLICK ANYWHERE TO START",
-    key="start_anywhere"
-):
-    st.switch_page("pages/selectplanet.py")
+    <div class="corner top-left">DEEP SPACE / 001</div>
+    <div class="corner top-right">SWINGBY PROGRAM</div>
+    <div class="corner bottom-left">GRAVITY ASSIST ADVENTURE</div>
+    <div class="corner bottom-right">SYSTEM READY</div>
+</div>
+
+<script>
+document.getElementById("scene").addEventListener("click", function() {
+    window.parent.location.search = "?start=1";
+});
+</script>
+</body>
+</html>
+""", height=850, scrolling=False)
