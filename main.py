@@ -12,7 +12,7 @@ st.set_page_config(
 # 전체 화면 클릭 후 다음 페이지로 이동
 if st.query_params.get("start") == "1":
     st.query_params.clear()
-    st.switch_page("pages/1_행성_선택.py")
+    st.switch_page("pages/selectplanet.py")
 
 # 불필요한 Streamlit UI 숨기기
 st.markdown("""
