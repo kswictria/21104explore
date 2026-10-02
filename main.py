@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 st.set_page_config(
@@ -20,17 +21,24 @@ st.markdown("""
     font-family: 'Noto Sans KR', sans-serif;
 }
 
-#MainMenu, footer, header {visibility: hidden;}
-[data-testid="stSidebar"] {display: none;}
+#MainMenu,
+footer,
+header {
+    visibility: hidden;
+}
+
+[data-testid="stSidebar"] {
+    display: none;
+}
+
 .block-container {
     max-width: 100%;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem 1rem 0;
 }
 
 .hero {
     position: relative;
-    min-height: 78vh;
+    min-height: calc(100vh - 2rem);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -39,9 +47,21 @@ st.markdown("""
     border: 1px solid rgba(91, 210, 255, .20);
     border-radius: 22px;
     background:
-        radial-gradient(circle at 50% 48%, rgba(37, 58, 125, .28), transparent 30%),
-        radial-gradient(circle at 80% 30%, rgba(135, 33, 188, .18), transparent 25%),
-        linear-gradient(180deg, rgba(2, 5, 18, .7), rgba(4, 6, 22, .92));
+        radial-gradient(
+            circle at 50% 48%,
+            rgba(37, 58, 125, .28),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 80% 30%,
+            rgba(135, 33, 188, .18),
+            transparent 25%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(2, 5, 18, .7),
+            rgba(4, 6, 22, .92)
+        );
     box-shadow: inset 0 0 80px rgba(35, 106, 255, .08);
 }
 
@@ -50,13 +70,41 @@ st.markdown("""
     position: absolute;
     inset: 0;
     background-image:
-        radial-gradient(1px 1px at 10% 20%, white 99%, transparent),
-        radial-gradient(2px 2px at 20% 70%, #78eaff 99%, transparent),
-        radial-gradient(1px 1px at 35% 32%, white 99%, transparent),
-        radial-gradient(2px 2px at 70% 20%, #d5a2ff 99%, transparent),
-        radial-gradient(1px 1px at 90% 60%, white 99%, transparent),
-        radial-gradient(1px 1px at 55% 85%, white 99%, transparent),
-        radial-gradient(2px 2px at 45% 12%, #80aaff 99%, transparent);
+        radial-gradient(
+            1px 1px at 10% 20%,
+            white 99%,
+            transparent
+        ),
+        radial-gradient(
+            2px 2px at 20% 70%,
+            #78eaff 99%,
+            transparent
+        ),
+        radial-gradient(
+            1px 1px at 35% 32%,
+            white 99%,
+            transparent
+        ),
+        radial-gradient(
+            2px 2px at 70% 20%,
+            #d5a2ff 99%,
+            transparent
+        ),
+        radial-gradient(
+            1px 1px at 90% 60%,
+            white 99%,
+            transparent
+        ),
+        radial-gradient(
+            1px 1px at 55% 85%,
+            white 99%,
+            transparent
+        ),
+        radial-gradient(
+            2px 2px at 45% 12%,
+            #80aaff 99%,
+            transparent
+        );
     background-size: 300px 230px;
     opacity: .85;
     pointer-events: none;
@@ -69,6 +117,7 @@ st.markdown("""
     border: 1px solid rgba(83, 218, 255, .23);
     border-radius: 50%;
     box-shadow: 0 0 35px rgba(60, 119, 255, .08);
+    pointer-events: none;
 }
 
 .orbit.two {
@@ -81,9 +130,19 @@ st.markdown("""
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #f7fcff, #71eaff 28%, #4a54d8 62%, #a327ff 85%);
-    box-shadow: 0 0 30px #3e9dff, 0 0 90px rgba(123, 48, 255, .6);
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #f7fcff,
+            #71eaff 28%,
+            #4a54d8 62%,
+            #a327ff 85%
+        );
+    box-shadow:
+        0 0 30px #3e9dff,
+        0 0 90px rgba(123, 48, 255, .6);
     margin-bottom: 25px;
+    pointer-events: none;
 }
 
 .game-title {
@@ -95,7 +154,11 @@ st.markdown("""
     letter-spacing: .09em;
     line-height: 1.1;
     color: #e8fbff;
-    text-shadow: 0 0 8px #56e9ff, 0 0 24px #168aff, 0 0 55px #812dff;
+    text-shadow:
+        0 0 8px #56e9ff,
+        0 0 24px #168aff,
+        0 0 55px #812dff;
+    pointer-events: none;
 }
 
 .game-subtitle {
@@ -104,29 +167,69 @@ st.markdown("""
     color: #a7bbdf;
     letter-spacing: .28em;
     font-size: .85rem;
+    text-align: center;
+    pointer-events: none;
 }
 
 .shooting {
     position: absolute;
     width: 130px;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #4ceaff, white);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #4ceaff,
+        white
+    );
     box-shadow: 0 0 12px #46dfff;
     transform: rotate(-38deg);
     animation: shoot 3.6s linear infinite;
     opacity: 0;
+    pointer-events: none;
 }
 
-.s1 {top: 18%; left: 8%; animation-delay: 0s;}
-.s2 {top: 35%; left: 72%; animation-delay: 1.2s;}
-.s3 {top: 65%; left: 20%; animation-delay: 2.1s;}
-.s4 {top: 12%; left: 85%; animation-delay: 2.7s;}
+.s1 {
+    top: 18%;
+    left: 8%;
+    animation-delay: 0s;
+}
+
+.s2 {
+    top: 35%;
+    left: 72%;
+    animation-delay: 1.2s;
+}
+
+.s3 {
+    top: 65%;
+    left: 20%;
+    animation-delay: 2.1s;
+}
+
+.s4 {
+    top: 12%;
+    left: 85%;
+    animation-delay: 2.7s;
+}
 
 @keyframes shoot {
-    0% {transform: translate(0, 0) rotate(-38deg); opacity: 0;}
-    10% {opacity: 1;}
-    65% {opacity: .9;}
-    100% {transform: translate(-240px, 180px) rotate(-38deg); opacity: 0;}
+    0% {
+        transform: translate(0, 0) rotate(-38deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    65% {
+        opacity: .9;
+    }
+
+    100% {
+        transform: translate(-240px, 180px) rotate(-38deg);
+        opacity: 0;
+    }
 }
 
 .hint {
@@ -137,51 +240,111 @@ st.markdown("""
     font-size: .9rem;
     letter-spacing: .22em;
     animation: pulse 1.7s ease-in-out infinite;
+    pointer-events: none;
 }
 
 @keyframes pulse {
-    0%, 100% {opacity: .5;}
-    50% {opacity: 1; text-shadow: 0 0 12px #43dfff;}
+    0%, 100% {
+        opacity: .5;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 12px #43dfff;
+    }
 }
 
-.stButton > button {
-    border: 1px solid #4bdcff !important;
-    color: #eafcff !important;
-    background: linear-gradient(110deg, rgba(25, 89, 156, .55), rgba(95, 34, 157, .55)) !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    transition: all .2s ease !important;
+/* 투명한 전체 화면 클릭 영역 */
+div[data-testid="stButton"] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999999 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
-.stButton > button:hover {
-    box-shadow: 0 0 20px rgba(62, 214, 255, .4);
-    border-color: #b1f8ff !important;
-    transform: translateY(-2px);
+
+div[data-testid="stButton"] button {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 클릭 영역의 텍스트를 화면에 표시하지 않음 */
+div[data-testid="stButton"] button p {
+    color: transparent !important;
+}
+
+/* 작은 화면 최적화 */
+@media (max-width: 600px) {
+    .hero {
+        min-height: calc(100vh - 2rem);
+    }
+
+    .sun {
+        width: 85px;
+        height: 85px;
+    }
+
+    .orbit {
+        width: 240px;
+        height: 240px;
+    }
+
+    .orbit.two {
+        width: 300px;
+        height: 300px;
+    }
+
+    .game-subtitle {
+        font-size: .65rem;
+        letter-spacing: .12em;
+    }
+
+    .hint {
+        font-size: .72rem;
+        letter-spacing: .12em;
+    }
 }
 </style>
 
 <div class="hero">
     <div class="orbit"></div>
     <div class="orbit two"></div>
+
     <div class="sun"></div>
+
     <div class="shooting s1"></div>
     <div class="shooting s2"></div>
     <div class="shooting s3"></div>
     <div class="shooting s4"></div>
-    <div class="game-title">SWINGBY<br>OVER</div>
-    <div class="game-subtitle">GRAVITY IS YOUR ENGINE</div>
-    <div class="hint">▼ &nbsp; CLICK TO START &nbsp; ▼</div>
+
+    <div class="game-title">
+        SWINGBY<br>OVER
+    </div>
+
+    <div class="game-subtitle">
+        GRAVITY IS YOUR ENGINE
+    </div>
+
+    <div class="hint">
+        ▼ &nbsp; CLICK ANYWHERE TO START &nbsp; ▼
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.write("")
-_, center, _ = st.columns([1, 1.2, 1])
-
-with center:
-    if st.button("✦  탐사 시작  ✦", use_container_width=True):
-        st.switch_page("pages/1_행성_선택.py")
-
-st.markdown(
-    "<p style='text-align:center;color:#65789f;font-size:12px;'>"
-    "A GRAVITY ASSIST ADVENTURE · SWINGBY OVER</p>",
-    unsafe_allow_html=True
-)
+# 화면 전체를 덮는 투명한 클릭 영역
+if st.button(
+    "CLICK ANYWHERE TO START",
+    key="start_anywhere"
+):
+    st.switch_page("pages/selectplanet.py")
