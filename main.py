@@ -9,27 +9,67 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 화면을 클릭하면 행성 선택 페이지로 이동
-if st.query_params.get("start") == "1":
-    st.query_params.clear()
+# 화면을 클릭하면 Streamlit 자체 페이지 이동 기능 실행
+if st.session_state.get("start_game", False):
+    st.session_state.start_game = False
     st.switch_page("pages/selectplanet.py")
 
+# 화면 스타일
 st.markdown("""
 <style>
-#MainMenu, footer, header,
+#MainMenu,
+footer,
+header,
 [data-testid="stSidebar"] {
     display: none !important;
 }
+
 .block-container {
     max-width: 100% !important;
     padding: 0 !important;
 }
-iframe {
+
+/* 투명 클릭 버튼을 브라우저 화면 전체에 배치 */
+div[data-testid="stButton"] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stButton"] button {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: transparent !important;
+    cursor: pointer !important;
+}
+
+div[data-testid="stButton"] button:hover,
+div[data-testid="stButton"] button:focus,
+div[data-testid="stButton"] button:active {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+}
+
+div[data-testid="stButton"] button p {
+    color: transparent !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# 첫 화면 비주얼
 components.html("""
 <!DOCTYPE html>
 <html>
@@ -52,18 +92,17 @@ html, body {
     width: 100%;
     height: 100vh;
     min-height: 600px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
     background:
         radial-gradient(ellipse at 50% 45%,
-            rgba(34, 65, 145, .30), transparent 34%),
+            rgba(34,65,145,.30), transparent 34%),
         radial-gradient(ellipse at 80% 25%,
-            rgba(118, 34, 170, .20), transparent 35%),
-        linear-gradient(145deg, #030611, #080a1d 55%, #10051d);
+            rgba(118,34,170,.20), transparent 35%),
+        linear-gradient(145deg,#030611,#080a1d 55%,#10051d);
 }
 
 .scene:before {
@@ -72,12 +111,12 @@ html, body {
     inset: 0;
     pointer-events: none;
     background-image:
-        radial-gradient(2px 2px at 10% 20%, white 99%, transparent),
-        radial-gradient(2px 2px at 30% 70%, #65e9ff 99%, transparent),
-        radial-gradient(2px 2px at 75% 25%, #d6a0ff 99%, transparent),
-        radial-gradient(1px 1px at 90% 60%, white 99%, transparent),
-        radial-gradient(1px 1px at 45% 15%, white 99%, transparent),
-        radial-gradient(2px 2px at 65% 85%, #72aaff 99%, transparent);
+        radial-gradient(2px 2px at 10% 20%,white 99%,transparent),
+        radial-gradient(2px 2px at 30% 70%,#65e9ff 99%,transparent),
+        radial-gradient(2px 2px at 75% 25%,#d6a0ff 99%,transparent),
+        radial-gradient(1px 1px at 90% 60%,white 99%,transparent),
+        radial-gradient(1px 1px at 45% 15%,white 99%,transparent),
+        radial-gradient(2px 2px at 65% 85%,#72aaff 99%,transparent);
     background-size: 220px 190px;
     animation: stars 18s linear infinite;
 }
@@ -89,34 +128,34 @@ html, body {
 
 .orbit {
     position: absolute;
-    width: min(42vw, 390px);
+    width: min(42vw,390px);
     aspect-ratio: 1;
-    border: 1px solid rgba(81, 210, 255, .28);
+    border: 1px solid rgba(81,210,255,.28);
     border-radius: 50%;
     pointer-events: none;
 }
 
 .orbit.outer {
-    width: min(54vw, 500px);
-    border-color: rgba(173, 91, 255, .20);
+    width: min(54vw,500px);
+    border-color: rgba(173,91,255,.20);
 }
 
 .sun {
     z-index: 2;
-    width: clamp(75px, 10vw, 120px);
+    width: clamp(75px,10vw,120px);
     aspect-ratio: 1;
     border-radius: 50%;
     background: radial-gradient(
         circle at 35% 28%,
-        #fff 0%, #8ef2ff 20%, #4779e8 52%, #a02dff 82%
+        #fff 0%,#8ef2ff 20%,#4779e8 52%,#a02dff 82%
     );
-    box-shadow: 0 0 24px #49cfff, 0 0 75px #5147ff88;
+    box-shadow: 0 0 24px #49cfff,0 0 75px #5147ff88;
     margin-bottom: 32px;
     animation: glow 4s ease-in-out infinite;
 }
 
 @keyframes glow {
-    0%, 100% { transform: scale(1); }
+    0%,100% { transform: scale(1); }
     50% { transform: scale(1.06); }
 }
 
@@ -124,12 +163,13 @@ html, body {
     position: relative;
     z-index: 3;
     color: #e8fbff;
-    font-size: clamp(45px, 8vw, 100px);
+    font-size: clamp(45px,8vw,100px);
     font-weight: 900;
     letter-spacing: .08em;
     line-height: 1.05;
     text-align: center;
-    text-shadow: 0 0 8px #56e9ff, 0 0 25px #168aff,
+    text-shadow: 0 0 8px #56e9ff,
+                 0 0 25px #168aff,
                  0 0 55px #812dff;
     user-select: none;
 }
@@ -138,7 +178,7 @@ html, body {
     z-index: 3;
     margin-top: 24px;
     color: #a7bbdf;
-    font-size: clamp(10px, 1.3vw, 15px);
+    font-size: clamp(10px,1.3vw,15px);
     letter-spacing: .25em;
     text-align: center;
     user-select: none;
@@ -155,7 +195,7 @@ html, body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: .45; }
+    0%,100% { opacity: .45; }
     50% { opacity: 1; text-shadow: 0 0 12px #43dfff; }
 }
 
@@ -163,7 +203,7 @@ html, body {
     position: absolute;
     width: 120px;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #4ceaff, white);
+    background: linear-gradient(90deg,transparent,#4ceaff,white);
     box-shadow: 0 0 12px #46dfff;
     transform: rotate(-38deg);
     opacity: 0;
@@ -208,7 +248,7 @@ html, body {
 </head>
 
 <body>
-<div class="scene" id="scene">
+<div class="scene">
     <div class="orbit"></div>
     <div class="orbit outer"></div>
 
@@ -227,12 +267,11 @@ html, body {
     <div class="corner bottom-left">GRAVITY ASSIST ADVENTURE</div>
     <div class="corner bottom-right">SYSTEM READY</div>
 </div>
-
-<script>
-document.getElementById("scene").addEventListener("click", function() {
-    window.parent.location.search = "?start=1";
-});
-</script>
 </body>
 </html>
 """, height=850, scrolling=False)
+
+# HTML 내부 JavaScript 대신 Streamlit 버튼으로 전환 처리
+if st.button("시작", key="start_game_button"):
+    st.session_state.start_game = True
+    st.rerun()
