@@ -12,7 +12,7 @@ st.set_page_config(
 # 화면을 클릭하면 Streamlit 자체 페이지 이동 기능 실행
 if st.session_state.get("start_game", False):
     st.session_state.start_game = False
-    st.switch_page("pages/selectplanet.py")
+    st.switch_page("pages/selectspaceship.py")
 
 # 화면 스타일
 st.markdown("""
