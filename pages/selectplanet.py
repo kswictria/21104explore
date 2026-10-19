@@ -1,6 +1,5 @@
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="행성 선택 | SWINGBY OVER",
@@ -15,13 +14,12 @@ st.markdown("""
 
 .stApp {
     background:
-        radial-gradient(ellipse at 50% 15%, #14244b, transparent 55%),
-        linear-gradient(145deg, #050916, #0a1025 55%, #050611);
+        radial-gradient(ellipse at 50% 15%, #17244b, transparent 55%),
+        linear-gradient(145deg, #050916, #0a1025 55%, #030611);
     color: #edf5ff;
 }
 
-#MainMenu, footer, header,
-[data-testid="stSidebar"] {
+#MainMenu, footer, header, [data-testid="stSidebar"] {
     display: none !important;
 }
 
@@ -37,272 +35,123 @@ h1 {
     text-shadow: 0 0 18px rgba(73, 204, 255, .45);
 }
 
-.intro {
+.subtitle {
     text-align: center;
     color: #91a8d2;
-    font-size: .82rem;
-    letter-spacing: .13em;
-    margin-bottom: 1.3rem;
+    font-size: .78rem;
+    letter-spacing: .12em;
+    margin-bottom: 24px;
 }
 
-[data-testid="stVerticalBlockBorderWrapper"] {
-    border-color: rgba(94, 171, 255, .25) !important;
-    background: linear-gradient(155deg, rgba(16, 29, 57, .8), rgba(5, 9, 23, .94));
-    border-radius: 14px !important;
+/* 행성 자체가 클릭 가능한 요소 */
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"] [data-testid="stButton"] button {
+    width: 100%;
+    height: 180px;
+    min-height: 180px;
+    white-space: pre-line;
+    border-radius: 18px;
+    border: 1px solid rgba(95, 170, 255, .3);
+    background: rgba(7, 14, 34, .72);
+    color: #eef6ff;
+    font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
 }
 
-.planet-label {
-    font-weight: 800;
-    font-size: 1.15rem;
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(1) [data-testid="stButton"] button {
+    background: radial-gradient(circle at 35% 30%, #c9c9c4 0%, #858b99 30%, #222b40 65%, #080d1b 100%);
 }
 
-.planet-sub {
-    color: #91a8d2;
-    font-size: .75rem;
-    letter-spacing: .08em;
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) [data-testid="stButton"] button {
+    background: radial-gradient(circle at 35% 30%, #ffe2a0 0%, #c98745 35%, #603e38 68%, #0b1020 100%);
+}
+
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(3) [data-testid="stButton"] button {
+    background: radial-gradient(circle at 35% 30%, #a6efff 0%, #2878d7 35%, #164c48 65%, #081126 100%);
+}
+
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(4) [data-testid="stButton"] button {
+    background: radial-gradient(circle at 35% 30%, #ffbd98 0%, #c34c36 38%, #57202d 70%, #0b1020 100%);
+}
+
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(5) [data-testid="stButton"] button {
+    background: repeating-linear-gradient(0deg, #9b6c50 0 12px, #e2c69a 13px 23px, #9b6c50 24px 30px);
+}
+
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"] [data-testid="stButton"] button:hover {
+    transform: scale(1.045);
+    border-color: #b1f3ff;
+    box-shadow: 0 0 25px rgba(70, 204, 255, .4);
+    color: white;
 }
 
 .planet-info {
+    margin-top: 12px;
+    padding: 16px;
+    min-height: 235px;
+    border: 1px solid rgba(95, 170, 255, .22);
+    border-radius: 13px;
+    background: linear-gradient(155deg, rgba(16, 29, 57, .8), rgba(5, 9, 23, .94));
+}
+
+.planet-name {
+    font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.stat {
     color: #c6d4ec;
-    font-size: .86rem;
-    line-height: 1.8;
+    font-size: .85rem;
+    line-height: 1.9;
 }
 
-button[kind="secondary"], .stButton button {
-    border: 1px solid #42cfff !important;
-    background: #0b2140 !important;
-    color: #e9faff !important;
-    border-radius: 9px !important;
-    transition: .2s ease;
+.description {
+    color: #91a4c4;
+    font-size: .78rem;
+    line-height: 1.6;
+    margin-top: 8px;
 }
 
-.stButton button:hover {
-    border-color: #b3f5ff !important;
-    box-shadow: 0 0 18px rgba(66, 207, 255, .35) !important;
-    transform: translateY(-1px);
+.locked-card {
+    opacity: .5;
 }
 
-button:disabled {
-    opacity: .35 !important;
+.stButton button {
+    border-radius: 8px;
 }
 
+@media (max-width: 800px) {
+    .block-container {
+        padding-left: .6rem !important;
+        padding-right: .6rem !important;
+    }
+
+    [data-testid="stHorizontalBlock"] [data-testid="stColumn"] [data-testid="stButton"] button {
+        height: 125px;
+        min-height: 125px;
+        font-size: .75rem;
+    }
+
+    .planet-info {
+        padding: 9px;
+        min-height: 260px;
+    }
+
+    .stat {
+        font-size: .72rem;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.title("탐사할 행성을 선택하세요.")
 st.markdown(
-    '<div class="intro">SELECT YOUR DESTINATION · GRAVITY WILL SHAPE YOUR JOURNEY</div>',
+    '<div class="subtitle">SELECT YOUR DESTINATION · GRAVITY WILL SHAPE YOUR JOURNEY</div>',
     unsafe_allow_html=True
 )
-
-# 행성 그림은 별도 HTML 영역에서 렌더링합니다.
-# 이렇게 하면 Streamlit Markdown이 HTML을 코드 블록으로 오해하지 않습니다.
-components.html("""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    background: transparent;
-    color: #edf5ff;
-    font-family: Arial, sans-serif;
-}
-
-.scene {
-    position: relative;
-    height: 300px;
-    overflow: hidden;
-    border: 1px solid rgba(93,177,255,.20);
-    border-radius: 18px;
-    background:
-        radial-gradient(ellipse at center, rgba(35,65,125,.30), transparent 70%),
-        rgba(3,8,22,.72);
-}
-
-.orbit {
-    position: absolute;
-    left: -8%;
-    width: 116%;
-    height: 200px;
-    border: 1px solid rgba(179,195,216,.24);
-    border-radius: 50%;
-    pointer-events: none;
-}
-.o1 { top: 25px; transform: rotate(-5deg); }
-.o2 { top: 75px; transform: rotate(4deg); }
-.o3 { top: 120px; transform: rotate(-3deg); }
-
-.planets {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    gap: 8px;
-    padding: 10px 12px;
-}
-
-.planet-wrap {
-    position: relative;
-    z-index: 2;
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: default;
-}
-
-.planet {
-    position: relative;
-    flex-shrink: 0;
-    border-radius: 50%;
-    transition: transform .25s ease, filter .25s ease;
-}
-
-.planet-wrap:hover .planet {
-    transform: scale(1.13);
-    filter: brightness(1.2);
-}
-
-.planet-wrap:hover .planet:after {
-    content: "";
-    position: absolute;
-    inset: -6px;
-    border: 1px solid #a4eeff;
-    border-radius: 50%;
-    box-shadow: 0 0 18px #43cfff;
-}
-
-.mercury {
-    width: 43px; height: 43px;
-    background: radial-gradient(circle at 32% 25%, #dedbd5, #858891 55%, #393e4b);
-    box-shadow: 0 0 17px #9ca3b4;
-}
-
-.venus {
-    width: 61px; height: 61px;
-    background: radial-gradient(circle at 32% 25%, #ffe6a4, #c98745 58%, #653f2e);
-    box-shadow: 0 0 18px #ffbd64;
-}
-
-.earth {
-    width: 70px; height: 70px;
-    overflow: hidden;
-    background: radial-gradient(circle at 35% 25%, #a5f4ff, #2878d7 50%, #132451);
-    box-shadow: 0 0 20px #4aafff;
-}
-
-.earth:before {
-    content: "";
-    position: absolute;
-    inset: 8px 18px 18px 6px;
-    border-radius: 45% 30% 50% 40%;
-    background: #56c58a;
-    transform: rotate(-28deg);
-}
-
-.mars {
-    width: 53px; height: 53px;
-    background: radial-gradient(circle at 32% 24%, #ffc09a, #c34c36 55%, #57202d);
-    box-shadow: 0 0 17px #ff7359;
-}
-
-.jupiter {
-    width: 104px; height: 104px;
-    overflow: hidden;
-    background: repeating-linear-gradient(
-        0deg, #b8875e 0 9px, #e9d0a4 10px 17px, #956448 18px 23px
-    );
-    box-shadow: 0 0 24px #ffca86;
-}
-
-.jupiter:before {
-    content: "";
-    position: absolute;
-    width: 24px;
-    height: 13px;
-    right: 18px;
-    top: 55px;
-    border-radius: 50%;
-    background: #a9573b;
-    transform: rotate(-12deg);
-}
-
-.name {
-    margin-top: 13px;
-    color: #eef6ff;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.en {
-    margin-top: 4px;
-    color: #92a7c9;
-    font-size: 10px;
-    letter-spacing: .09em;
-}
-
-.locked .name, .locked .en {
-    color: #78849a;
-}
-
-@media (max-width: 650px) {
-    .scene { height: 240px; }
-    .mercury { width: 28px; height: 28px; }
-    .venus { width: 40px; height: 40px; }
-    .earth { width: 46px; height: 46px; }
-    .mars { width: 35px; height: 35px; }
-    .jupiter { width: 59px; height: 59px; }
-    .name { font-size: 11px; }
-    .en { font-size: 8px; }
-}
-</style>
-</head>
-<body>
-<div class="scene">
-    <div class="orbit o1"></div>
-    <div class="orbit o2"></div>
-    <div class="orbit o3"></div>
-
-    <div class="planets">
-        <div class="planet-wrap">
-            <div class="planet mercury"></div>
-            <div class="name">수성</div>
-            <div class="en">MERCURY</div>
-        </div>
-        <div class="planet-wrap">
-            <div class="planet venus"></div>
-            <div class="name">금성</div>
-            <div class="en">VENUS</div>
-        </div>
-        <div class="planet-wrap locked">
-            <div class="planet earth"></div>
-            <div class="name">🔒 지구</div>
-            <div class="en">HOME · LOCKED</div>
-        </div>
-        <div class="planet-wrap">
-            <div class="planet mars"></div>
-            <div class="name">화성</div>
-            <div class="en">MARS</div>
-        </div>
-        <div class="planet-wrap">
-            <div class="planet jupiter"></div>
-            <div class="name">목성</div>
-            <div class="en">JUPITER</div>
-        </div>
-    </div>
-</div>
-</body>
-</html>
-""", height=310, scrolling=False)
-
-st.write("")
 
 planets = {
     "수성": {
@@ -339,60 +188,76 @@ planets = {
         "count": 15,
         "difficulty": "★★★★★",
         "color": "#ffd08c",
-        "description": "강력한 중력을 가진 거대 가스 행성입니다. 큰 중력 도움을 기대할 수 있지만 난도가 높습니다."
+        "description": "강력한 중력을 가진 거대 가스 행성입니다. 중력 도움을 크게 받을 수 있지만 난도가 높습니다."
     }
 }
 
-st.subheader("목적지를 선택하세요")
-st.caption("행성을 선택하면 우주선 선택 화면으로 바로 이동합니다. 지구는 출발 행성이라 선택할 수 없습니다.")
-
-order = ["수성", "금성", "지구", "화성", "목성"]
+# 행성 버튼을 누르면 별도 탐사 버튼 없이 바로 이동
 cols = st.columns(5, gap="small")
+order = ["수성", "금성", "지구", "화성", "목성"]
 
 for col, name in zip(cols, order):
     with col:
         if name == "지구":
-            with st.container(border=True):
-                st.markdown("### 🔒 지구")
-                st.caption("EARTH · 출발 행성")
-                st.markdown("**표면 중력:** 1.00 G")
-                st.markdown("**역할:** 출발 지점")
-                st.markdown("**선택:** 불가능")
-                st.caption("탐사 목적지로 선택할 수 없습니다.")
+            st.button(
+                "🔒\n지구\n출발 행성",
+                key="planet_earth",
+                disabled=True,
+                use_container_width=True
+            )
         else:
-            p = planets[name]
-            with st.container(border=True):
-                st.markdown(
-                    f"<div class='planet-label' style='color:{p['color']}'>{name}</div>"
-                    f"<div class='planet-sub'>{p['english']}</div>",
-                    unsafe_allow_html=True
-                )
-                st.write("")
-                st.markdown(
-                    f"<div class='planet-info'>"
-                    f"표면 중력: {p['gravity']}<br>"
-                    f"탈출 속도: {p['escape']}<br>"
-                    f"탐사 소행성: {p['count']}개<br>"
-                    f"난이도: {p['difficulty']}"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
-                st.write("")
-                st.caption(p["description"])
-
             if st.button(
-                f"🚀 {name} 탐사",
-                key=f"select_{name}",
+                name,
+                key=f"planet_{name}",
                 use_container_width=True
             ):
                 st.session_state.selected_planet = name
-                st.session_state.selected_ship = None
+                st.session_state.pop("selected_ship", None)
                 st.session_state.pop("selected_ship_name", None)
                 st.session_state.pop("selected_ship_stats", None)
                 st.switch_page("pages/selectspaceship.py")
 
+# 행성 정보는 각 행성 아래에 항상 표시
 st.write("")
-st.caption("※ 표면 중력은 지구를 1 G로 둔 상대값입니다. 소행성 개수와 난이도는 실제 천체의 개수가 아니라 게임용 설정입니다.")
+info_cols = st.columns(5, gap="small")
+
+for col, name in zip(info_cols, order):
+    with col:
+        if name == "지구":
+            st.markdown("""
+            <div class="planet-info locked-card">
+                <div class="planet-name">지구</div>
+                <div class="stat">
+                    표면 중력: 1.00 G<br>
+                    역할: 출발 행성<br>
+                    선택: 불가능
+                </div>
+                <div class="description">
+                    출발 지점으로 지정되어 목적지로 선택할 수 없습니다.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            p = planets[name]
+            st.markdown(f"""
+            <div class="planet-info">
+                <div class="planet-name" style="color:{p['color']}">{name}</div>
+                <div class="stat">
+                    표면 중력: {p['gravity']}<br>
+                    탈출 속도: {p['escape']}<br>
+                    탐사 소행성: {p['count']}개<br>
+                    난이도: {p['difficulty']}
+                </div>
+                <div class="description">{p['description']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+st.write("")
+st.caption(
+    "행성 자체를 클릭해 목적지를 선택하세요. "
+    "지구는 출발 행성이므로 선택할 수 없습니다. "
+    "소행성 개수와 난이도는 게임용 설정입니다."
+)
 
 if st.button("← 메인 화면으로"):
     st.switch_page("main.py")
