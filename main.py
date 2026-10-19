@@ -9,19 +9,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 화면을 클릭하면 Streamlit 자체 페이지 이동 기능 실행
-if st.session_state.get("start_game", False):
-    st.session_state.start_game = False
-    st.switch_page("pages/selectspaceship.py")
-
-# 화면 스타일
 st.markdown("""
 <style>
-#MainMenu,
-footer,
-header,
-[data-testid="stSidebar"] {
+#MainMenu, footer, header,
+[data-testid="stSidebar"],
+[data-testid="stHeader"] {
     display: none !important;
+}
+
+.stApp {
+    background: #030611;
+    overflow: hidden;
 }
 
 .block-container {
@@ -29,7 +27,6 @@ header,
     padding: 0 !important;
 }
 
-/* 투명 클릭 버튼을 브라우저 화면 전체에 배치 */
 div[data-testid="stButton"] {
     position: fixed !important;
     inset: 0 !important;
@@ -46,21 +43,11 @@ div[data-testid="stButton"] button {
     width: 100% !important;
     height: 100% !important;
     min-height: 100vh !important;
+    opacity: 0 !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    border-radius: 0 !important;
-    color: transparent !important;
     cursor: pointer !important;
-}
-
-div[data-testid="stButton"] button:hover,
-div[data-testid="stButton"] button:focus,
-div[data-testid="stButton"] button:active {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: transparent !important;
 }
 
 div[data-testid="stButton"] button p {
@@ -69,7 +56,6 @@ div[data-testid="stButton"] button p {
 </style>
 """, unsafe_allow_html=True)
 
-# 첫 화면 비주얼
 components.html("""
 <!DOCTYPE html>
 <html>
@@ -92,11 +78,11 @@ html, body {
     width: 100%;
     height: 100vh;
     min-height: 600px;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     background:
         radial-gradient(ellipse at 50% 45%,
             rgba(34,65,145,.30), transparent 34%),
@@ -105,11 +91,9 @@ html, body {
         linear-gradient(145deg,#030611,#080a1d 55%,#10051d);
 }
 
-.scene:before {
-    content: "";
+.stars {
     position: absolute;
     inset: 0;
-    pointer-events: none;
     background-image:
         radial-gradient(2px 2px at 10% 20%,white 99%,transparent),
         radial-gradient(2px 2px at 30% 70%,#65e9ff 99%,transparent),
@@ -119,6 +103,7 @@ html, body {
         radial-gradient(2px 2px at 65% 85%,#72aaff 99%,transparent);
     background-size: 220px 190px;
     animation: stars 18s linear infinite;
+    pointer-events: none;
 }
 
 @keyframes stars {
@@ -246,9 +231,9 @@ html, body {
 }
 </style>
 </head>
-
 <body>
 <div class="scene">
+    <div class="stars"></div>
     <div class="orbit"></div>
     <div class="orbit outer"></div>
 
@@ -271,7 +256,6 @@ html, body {
 </html>
 """, height=850, scrolling=False)
 
-# HTML 내부 JavaScript 대신 Streamlit 버튼으로 전환 처리
-if st.button("시작", key="start_game_button"):
-    st.session_state.start_game = True
-    st.rerun()
+# 화면 전체에 투명 클릭 영역을 둡니다.
+if st.button("게임 시작", key="start_game_button"):
+    st.switch_page("pages/selectplanet.py")
