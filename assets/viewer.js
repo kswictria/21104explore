@@ -1,126 +1,75 @@
-const scenes = new WeakMap();
-const THREE_URL = 'https://esm.sh/three@0.164.1';
-const ORBIT_URL = 'https://esm.sh/three@0.164.1/examples/jsm/controls/OrbitControls.js';
-
-export default function({ parentElement, data }) {
-  const viewport = parentElement.querySelector('#rover-viewport');
-  if (!viewport) return;
-  let state = scenes.get(viewport);
-  if (state) {
-    state.update(data?.params || {});
-    return;
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const root=document.getElementById('app');
+const d=window.ROVER_STATE.design;const ter=window.ROVER_STATE.terrain;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#1a202d');scene.fog=new THREE.FogExp2(0x362926,0.004);
+const camera=new THREE.PerspectiveCamera(48,root.clientWidth/root.clientHeight,.02,1600);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(root.clientWidth,root.clientHeight);renderer.shadowMap.enabled=true;renderer.outputColorSpace=THREE.SRGBColorSpace;root.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdbe7ff,0x8c3925,2.3));const sun=new THREE.DirectionalLight(0xffd9b5,3);sun.position.set(-8,14,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);scene.add(sun);
+const ctrl=new OrbitControls(camera,renderer.domElement);ctrl.enableDamping=true;ctrl.dampingFactor=.07;ctrl.maxPolarAngle=Math.PI*.49;
+let worldWidth=ter?85000:13;
+function material(color,metalness=0,roughness=.8){return new THREE.MeshStandardMaterial({color,metalness,roughness});}
+const rust=material('#92523a'),dark=material('#262f36'),metal=material('#8f9aa5',.65,.34),gold=material('#c8944f',.45,.45),wheelMat=material('#34383c',.22,.7);
+function box(x,y,z,w,h,l,mat,parent=scene){const ob=new THREE.Mesh(new THREE.BoxGeometry(w,h,l),mat);ob.position.set(x,y,z);ob.castShadow=true;ob.receiveShadow=true;parent.add(ob);return ob;}
+function link(A,B,rad=.036,mat=metal,parent=scene){const va=new THREE.Vector3(...A),vb=new THREE.Vector3(...B);let delta=vb.clone().sub(va);const part=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,delta.length(),10),mat);part.position.copy(va.add(vb).multiplyScalar(.5));part.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());part.castShadow=true;parent.add(part);}
+// Units of rover are metres, independent of the visual-only world scale of a MOLA patch.
+function createRover(){const rover=new THREE.Group();scene.add(rover);const R=d.radius,W=d.width;
+ const half=d.body_width/2,bodyY=R+d.clearance+.13;
+ box(0,bodyY,0,d.body_width,.24,d.body_length,dark,rover);
+ box(0,bodyY+.17,0,d.body_width*.8,.12,d.body_length*.72,gold,rover);
+ // wheel axes along X; three axle positions each side
+ const axle=[-d.body_length*.57,0,d.body_length*.57];
+ for (const side of [-1,1]){
+   const x=side*(half+W*.6+.08);
+   for (let i=0;i<3;i++){
+     const z=axle[i],center=[x,R,z];
+     const wheel=new THREE.Mesh(new THREE.CylinderGeometry(R,R,W,40),wheelMat);
+     wheel.rotation.z=Math.PI/2;wheel.position.set(...center);wheel.castShadow=true;wheel.receiveShadow=true;rover.add(wheel);
+     const hub=new THREE.Mesh(new THREE.CylinderGeometry(R*.32,R*.32,W+.015,22),gold);hub.rotation.z=Math.PI/2;hub.position.set(...center);rover.add(hub);
+     // grousers placed on circumference
+     for(let j=0;j<d.grousers;j++){
+       const a=j*2*Math.PI/d.grousers;
+       const tread=box(x,R+(R+d.grouser_height*.36)*Math.sin(a),z+(R+d.grouser_height*.36)*Math.cos(a),W+.013,d.grouser_height*.7,R*.19,metal,rover);
+       tread.rotation.x=-a;
+     }
+   }
+   const base=[side*(half-.07),bodyY-.07,0];
+   if(d.suspension==='Rocker-bogie'){
+     const mid=[x,R+.22,0];const bogie=[x,R+.15,axle[1]*.5+axle[2]*.5];
+     link(base,mid,.045,metal,rover);link(mid,[x,R,axle[0]],.048,metal,rover);link(mid,bogie,.05,metal,rover);
+     link(bogie,[x,R,axle[1]],.042,metal,rover);link(bogie,[x,R,axle[2]],.042,metal,rover);
+   } else {for(const z of axle)link([base[0],base[1],z],[x,R,z],.055,metal,rover);}
+ }
+ link([0,bodyY+.2,-.35],[0,bodyY+.65,-.35],.032,metal,rover);box(0,bodyY+.71,-.35,.31,.16,.19,dark,rover);
+ const cog=new THREE.Mesh(new THREE.SphereGeometry(.07,15,12),new THREE.MeshBasicMaterial({color:0xff5555}));cog.position.set(0,d.cg,0);rover.add(cog);
+ return rover;}
+let rover=createRover();
+const N=ter?ter.heights.length:90;
+let world,heights;
+if(ter){
+  heights=ter.heights;let min=Infinity,max=-Infinity;for(const row of heights)for(const v of row){min=Math.min(min,v);max=Math.max(max,v)}
+  // exaggerate for readability; slope test uses separate assumed ramp, NOT rescaled slope.
+  let relief=Math.max(1,max-min);worldWidth=85000;
+  const geometry=new THREE.PlaneGeometry(worldWidth,worldWidth,N-1,N-1);geometry.rotateX(-Math.PI/2);
+  const positions=geometry.attributes.position;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const p=i*N+j;positions.setY(p,(heights[i][j]-heights[Math.floor(N/2)][Math.floor(N/2)])*13);
   }
-  // Modules are cached by the browser. This avoids reinitializing WebGL on
-  // routine Streamlit reruns; only parametric rover meshes are rebuilt.
-  Promise.all([import(THREE_URL), import(ORBIT_URL)]).then(([THREE, orbit]) => {
-    if (!viewport.isConnected) return;
-    if (scenes.has(viewport)) { scenes.get(viewport).update(data?.params || {}); return; }
-    const { OrbitControls } = orbit;
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x172131, 16, 42);
-    const camera = new THREE.PerspectiveCamera(43, 1, .04, 100);
-    camera.position.set(3.9, 2.8, 4.7);
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    viewport.innerHTML = '';
-    viewport.appendChild(renderer.domElement);
-    const label = document.createElement('div'); label.className='viewer-label'; label.textContent='ROVER // DESIGN STUDIO'; viewport.appendChild(label);
-    const corner = document.createElement('div'); corner.className='viewer-corner'; corner.textContent='MARS GRAVITY  ·  3.71 m/s²'; viewport.appendChild(corner);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; controls.dampingFactor=.06;
-    controls.maxPolarAngle = Math.PI*.49; controls.minDistance=1.8;controls.maxDistance=13;
-    controls.target.set(0,.5,0);
-    scene.add(new THREE.HemisphereLight(0xbad5ff, 0x543021, 2.1));
-    const sun = new THREE.DirectionalLight(0xffd9ae,3.2);
-    sun.position.set(-3,8,5); sun.castShadow=true;
-    sun.shadow.mapSize.set(1024,1024);
-    scene.add(sun);
-    const groundMat = new THREE.MeshStandardMaterial({color:0x906047,roughness:1});
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(70,70),groundMat);
-    ground.rotation.x=-Math.PI/2;ground.position.y=-.016;ground.receiveShadow=true;scene.add(ground);
-    const grid = new THREE.GridHelper(24,48,0x6a5144,0x664c3d);
-    grid.position.y=.006;grid.material.opacity=.28;grid.material.transparent=true;scene.add(grid);
-    const rover = new THREE.Group(); scene.add(rover);
-    const mat=(color,metalness=.25,roughness=.65)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
-    const metal=mat(0xc8d4d9,.72,.32), dark=mat(0x232f3d,.52,.51), orange=mat(0xef9139,.32,.5), tire=mat(0x666d75,.56,.6), gold=mat(0xb4945c,.58,.43);
-    function box(group,w,h,d,x,y,z,material){
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
-      mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
-    }
-    function link(group, a,b,r,material){
-      const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),delta=bv.clone().sub(av);
-      const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,delta.length(),10),material);
-      mesh.position.copy(av).add(bv).multiplyScalar(.5);
-      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
-      mesh.castShadow=true;group.add(mesh);
-    }
-    function wheel(group,x,y,z,p){
-      const r=p.wheel_radius,w=p.wheel_width;
-      const tireMesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,w,40), tire);
-      tireMesh.rotation.x=Math.PI/2;tireMesh.position.set(x,y,z);tireMesh.castShadow=true;group.add(tireMesh);
-      for(const sign of [-1,1]){
-        const hub=new THREE.Mesh(new THREE.CylinderGeometry(r*.48,r*.48,.012,28),metal);
-        hub.rotation.x=Math.PI/2;hub.position.set(x,y,z+sign*(w*.5+.006));group.add(hub);
-        const axle=new THREE.Mesh(new THREE.CylinderGeometry(r*.16,r*.16,.025,20),orange);
-        axle.rotation.x=Math.PI/2; axle.position.set(x,y,z+sign*(w*.5+.02));group.add(axle);
-      }
-      if(p.wheel_style !== '평활 휠') {
-        const count=p.wheel_style==='격자형 휠'?24:p.grouser_count;
-        const ht=p.wheel_style==='격자형 휠'?.012:p.grouser_height;
-        for(let i=0;i<count;i++){
-          const a=i*2*Math.PI/count;
-          const cleat=new THREE.Mesh(new THREE.BoxGeometry(.022+ht,w*.94,.018+ht),gold);
-          // Box geometry initially extends in y; rotate around wheel's z axis.
-          cleat.position.set(x+(r+ht*.45)*Math.sin(a),y+(r+ht*.45)*Math.cos(a),z);
-          cleat.rotation.z=-a;cleat.castShadow=true;group.add(cleat);
-        }
-      }
-    }
-    function clearGroup(g){
-      while(g.children.length){const m=g.children[0];g.remove(m);m.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-    }
-    function update(p){
-      if(!p.wheel_radius)return;
-      clearGroup(rover);
-      const r=p.wheel_radius;
-      const lift=Math.max(p.clearance,r*.85);
-      const top=lift+.23;
-      const spread=p.body_width*.5+p.wheel_width*.53+.09;
-      const front=p.body_length*.6,mid=0,back=-p.body_length*.6;
-      box(rover,p.body_length,.26,p.body_width,0,top,0,orange);
-      box(rover,p.body_length*.92,.07,p.body_width*.9,0,top+.165,0,metal);
-      box(rover,p.body_length*.42,.14,p.body_width*.58,-.12,top+.27,0,dark);
-      box(rover,.15,.13,.20,front*.55,top+.34,0,metal);
-      link(rover,[front*.55,top+.35,0],[front*.55,top+.76,0],.034,dark);
-      box(rover,.24,.17,.24,front*.55,top+.78,0,metal);
-      for(const sign of [-1,1]){
-        const z=sign*spread;
-        [front,mid,back].forEach(x=>wheel(rover,x,r,z,p));
-        if(p.suspension.startsWith('6륜 로커')){
-          link(rover,[-.1,top-.12,sign*p.body_width*.47],[front,r,z],.044,metal);
-          link(rover,[-.1,top-.12,sign*p.body_width*.47],[back*.54,r+.11,z],.047,metal);
-          link(rover,[back*.54,r+.11,z],[mid,r,z],.035,dark);
-          link(rover,[back*.54,r+.11,z],[back,r,z],.035,dark);
-        }else{
-          for(const x of [front,mid,back]) link(rover,[x*.9,top-.13,sign*p.body_width*.45],[x,r,z],.043,metal);
-        }
-      }
-      // Visualization-only CG marker: does not imply a solved mass distribution.
-      const cg = new THREE.Mesh(new THREE.SphereGeometry(.065,16,10),mat(0x48d4da,.1,.3));
-      cg.position.set(0, p.clearance+.2+p.cg_extra,0);rover.add(cg);
-    }
-    const ro=new ResizeObserver(()=>{
-      const w=Math.max(1,viewport.clientWidth),h=Math.max(1,viewport.clientHeight);
-      renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
-    });ro.observe(viewport);
-    let alive=true;
-    function tick(){ if(!alive)return;controls.update();renderer.render(scene,camera);requestAnimationFrame(tick); }
-    tick();
-    const current={update,dispose(){alive=false;ro.disconnect();controls.dispose();renderer.dispose();clearGroup(rover);}};
-    scenes.set(viewport,current);
-    update(data?.params||{});
-  }).catch(error=>{viewport.innerHTML='<div class="viewport-loading">3D 라이브러리를 불러오지 못했습니다. 인터넷 연결 또는 브라우저 콘솔을 확인하세요.</div>'; console.error(error);});
+  geometry.computeVertexNormals();
+  world=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:ter.real?0xae5c3a:0x946452,wireframe:false,flatShading:true,roughness:1,side:THREE.DoubleSide}));
+  world.receiveShadow=true;scene.add(world);
+  // Rover deliberately displayed at an illustrative scale so it's visible in the huge MOLA area.
+  rover.scale.setScalar(1100);rover.position.y=40;
+  camera.position.set(18000,13000,17500);ctrl.target.set(0,0,0);
+}else{
+  const geo=new THREE.PlaneGeometry(14,14,85,85);geo.rotateX(-Math.PI/2);let p=geo.attributes.position;
+  for(let i=0;i<p.count;i++){let x=p.getX(i),z=p.getZ(i);const ridge=.18*Math.sin(x*1.4)*Math.cos(z*1.2);p.setY(i,-.04+ridge*Math.min(1,Math.max(0,(Math.hypot(x,z)-2)/2)));}
+  geo.computeVertexNormals();world=new THREE.Mesh(geo,rust);world.receiveShadow=true;scene.add(world);
+  camera.position.set(4.4,2.9,4.7);ctrl.target.set(0,.65,0);
 }
+ctrl.update();
+const legend=document.createElement('div');legend.id='legend';legend.textContent='마우스 드래그: 회전  ·  휠: 확대 / 축소';root.appendChild(legend);
+const label=document.createElement('div');label.id='label';label.innerHTML=ter?`<b>MARS TERRAIN / MOLA</b><br>${ter.source}<br>중심 ${ter.lat}°N ${ter.lon}°E / ±${ter.span_deg/2}°<br><small>지형 높이 13배 강조 · 로버 크기 과장</small>`:`<b>ROVER WORKSHOP</b><br>6-WHEEL CONFIGURATION<br>Wheel Ø ${(d.radius*2).toFixed(2)} m · ${d.mass} kg`;root.appendChild(label);
+function resize(){const w=root.clientWidth,h=root.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+window.addEventListener('resize',resize);
+function render(){requestAnimationFrame(render);ctrl.update();renderer.render(scene,camera)}render();
