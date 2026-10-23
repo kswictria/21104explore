@@ -1,35 +1,30 @@
 import streamlit as st
-from core import init, heading, physics, viewer, params, caveat
-
+from core import init,rover_html,engineering,terrain_patch
 init()
-heading('TERRAIN TEST','가상 경사면·지면 접지 시험')
-terrain=st.selectbox('시험 환경',['암반 경사면','먼지 덮인 경사면','매끄러운 지반'])
-mu={'암반 경사면':.75,'먼지 덮인 경사면':.45,'매끄러운 지반':.25}[terrain]
-cr={'암반 경사면':.08,'먼지 덮인 경사면':.15,'매끄러운 지반':.06}[terrain]
-angle=st.slider('시험 경사각 (°)',0,35,16)
-r=physics(angle,mu,cr)
-left,right=st.columns([2,1],gap='large')
+st.caption('ROVER FORGE  /  PHASE 02 OF 03')
+st.title('02 · 화성 지형 테스트')
+st.write('실제 MOLA 관측 고도를 불러오며, 연결에 실패하면 시범용 지형을 명확히 표시합니다. 관측 지형의 해상도는 로버 바퀴보다 훨씬 커서 작은 암석은 모델링하지 않습니다.')
+a,b,c=st.columns(3)
+with a: lat=st.number_input('중심 위도 (°N)',-70.0,70.0,18.5,.5)
+with b: lon=st.number_input('중심 경도 (°E)',0.0,359.0,77.5,.5)
+with c: angle=st.slider('별도 주행 시험 경사각 (°)',0,35,15)
+surface=st.selectbox('접지 조건 (가정값)', ['암반 (μ=0.70)','혼합 지반 (μ=0.55)','느슨한 모래 (μ=0.35)'])
+mu={'암반 (μ=0.70)':.70,'혼합 지반 (μ=0.55)':.55,'느슨한 모래 (μ=0.35)':.35}[surface]
+with st.spinner('화성 고도 데이터를 준비 중...'):
+    terrain=terrain_patch(float(lat),float(lon))
+st.info('지형 출처: '+terrain['source'])
+rover_html(535,terrain)
+st.caption('MOLA 고도 지형은 관측 기반이며 시각화를 위해 수직 축이 강조됩니다. 화면의 바위, 로버 크기와 충돌은 별도 게임 표현입니다. 아래 경사 시험은 지도 픽셀을 따라 실제로 주행한 결과가 아닙니다.')
+res=engineering(st.session_state.design,angle,mu)
+a,b,c=st.columns(3)
+a.metric('필요 구동력',f"{res['required']} N")
+b.metric('사용 가능 구동력',f"{res['available']} N")
+c.metric('여유 구동력',f"{res['margin']} N")
+st.write('시험 판정:', '✅ 기본 등판 조건 충족' if res['pass'] else '⚠️ 구동력·안정성 조건 부족')
+left,right=st.columns(2)
 with left:
-    viewer(470)
-    st.caption('3D 화면은 평평한 설계 뷰어입니다. 선택한 경사가 화면 지형에 반영되거나 로버가 실제로 움직이는 것은 아닙니다.')
+    if st.button('← 설계 수정',use_container_width=True): st.switch_page('pages/1_설계실.py')
 with right:
-    st.metric('사용 가능한 구동력',f"{r['force']:.0f} N")
-    st.metric('요구 주행 힘',f"{r['required']:.0f} N")
-    st.metric('접지력 상한',f"{r['grip']:.0f} N")
-    st.metric('힘 여유량',f"{r['margin']:+.0f} N")
-    if r['ok']: st.success('기준 통과: 정적 모델에서 구동 및 접지 조건 충족')
-    else: st.error('기준 실패: 구동력 또는 접지력 부족')
-    if st.button('결과 기록하기',type='primary',use_container_width=True):
-        st.session_state.history.append({'번호':len(st.session_state.history)+1,'지형':terrain,'경사(°)':angle,
-            '질량(kg)':params()['mass'],'바퀴 반지름(m)':params()['wheel_radius'],
-            '구동력(N)':round(r['force'],1),'요구 힘(N)':round(r['required'],1),
-            '접지 한계(N)':round(r['grip'],1),'판정':'통과' if r['ok'] else '실패'})
-        st.success('이번 세션의 미션 기록에 저장했습니다.')
-        st.switch_page('pages/3_미션_기록.py')
-st.info('이 페이지의 지형별 마찰·구름저항 값은 게임용 가정이며 실제 화성 지반 측정값이 아닙니다.')
-with st.expander('적용된 계산식'):
-    st.latex(r'F_{drive}=6\tau/r')
-    st.latex(r'F_{required}=mg(\sin\theta+c_r\cos\theta)')
-    st.latex(r'F_{grip}=\mu mg\cos\theta')
-    st.write('구동력과 접지력 모두 요구 힘 이상이어야 통과로 표시합니다. 실차 검증에 사용할 수 없습니다.')
-caveat()
+    if st.button('테스트 종료 → 결과 확인',type='primary',use_container_width=True):
+        st.session_state.result={'analysis':res,'terrain_source':terrain['source'],'terrain_real':terrain['real'],'lat':lat,'lon':lon,'design':st.session_state.design.copy(),'surface':surface}
+        st.switch_page('pages/3_미션_결과.py')
