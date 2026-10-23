@@ -28,8 +28,7 @@ def mola_grid():
     p=ROOT/'data'/'megt90n000cb.img'
     if p.exists(): raw=p.read_bytes()
     else:
-        req=urllib.request.Request(MOLA_URL,headers={'User-Agent':'RoverForgeEducational/1.0'})
-        with urllib.request.urlopen(req,timeout=18) as f: raw=f.read()
+        raise FileNotFoundError('MOLA 파일 미설치: data/megt90n000cb.img')
     if len(raw)!=1440*720*2: raise ValueError('MOLA 파일 크기 불일치')
     return np.frombuffer(raw,dtype='>i2').reshape(720,1440).astype(float)
 
@@ -94,3 +93,4 @@ if st.session_state.stage==0:
 elif st.session_state.stage==1:
     st.title('01 / 화성 탐사 지역 선택')
     st.write('지도에서 후보 지역의 위치를 확인하고 시험할 탐사 지점을 선택하세요.')
+    # Dependency-free Mars coordinate map (SVG) and regional height preview (SVG).
