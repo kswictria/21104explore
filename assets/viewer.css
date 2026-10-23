@@ -1,6 +1,1 @@
-#rover-viewport {width:100%; height:100%; min-height: 530px; position:relative; overflow:hidden; background:radial-gradient(ellipse at 50% 25%, #253044 0%,#111b29 52%,#0b111a 100%); border:1px solid #344154; border-radius:14px;}
-#rover-viewport canvas {width:100%;height:100%; display:block; outline:none; cursor:grab;}
-#rover-viewport canvas:active {cursor:grabbing;}
-.viewport-loading {position:absolute; top:46%;width:100%;text-align:center; font:14px system-ui;color:#bbc7d5;}
-.viewer-label {position:absolute;pointer-events:none;left:16px;top:14px;color:#d4dfec;font:600 12px system-ui;letter-spacing:.1em;}
-.viewer-corner {position:absolute;pointer-events:none;right:14px;bottom:12px;color:#95a4ba;font:11px system-ui;}
+*{box-sizing:border-box}body{margin:0;background:#0c1420;color:white;font:14px system-ui}#app{width:100%;height:100vh;position:relative;overflow:hidden}canvas{display:block}#label{position:absolute;top:15px;left:17px;background:#0a1423b8;border:1px solid #ffffff22;border-radius:9px;padding:12px 14px;pointer-events:none;line-height:1.65}#legend{position:absolute;bottom:14px;left:17px;background:#0a1423b8;border:1px solid #ffffff22;padding:8px 12px;border-radius:8px;color:#c7d2dd;font-size:12px;pointer-events:none}#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#ffd9cb;background:#101722;padding:25px;text-align:center}
