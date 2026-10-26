@@ -93,4 +93,4 @@ if st.session_state.stage==0:
 elif st.session_state.stage==1:
     st.title('01 / 실제 화성 지도에서 탐사 지역 선택')
     st.write('NASA Mars Global Surveyor의 MOLA 고도 관측으로 만든 **실제 화성 전역 지도**입니다. 지도를 확인하고 아래에서 지역을 선택하세요.')
-    # Actual NASA-hosted MOLA cylindrical map; no long download and no Plotly dependency.
+    # NASA Mars Trek WMTS tiles; browser loads only visible tiles on demand.
