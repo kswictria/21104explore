@@ -1,15 +1,22 @@
 from pathlib import Path
+import json
 import streamlit as st
 import streamlit.components.v1 as components
-ROOT=Path(__file__).resolve().parent
-STYLE='''<style>[data-testid="stSidebar"],[data-testid="stSidebarNav"],[data-testid="collapsedControl"],[data-testid="stSidebarCollapsedControl"]{display:none!important}.block-container{max-width:1250px;padding-top:1.2rem}.stApp{background:#f6f1e7;color:#29323f}h1,p{color:#29323f!important}div.stButton>button{border:2px solid #29323f;border-radius:12px;color:#29323f}</style>'''
-CONFIG={1:('🪨 화성 암석 집기',180),2:('🔋 배터리 분리하기',300),3:('🛰️ 위성 수리',420)}
-def show(num):
-    st.set_page_config(page_title='MECHA LAB | '+CONFIG[num][0],page_icon='🦾',layout='wide',initial_sidebar_state='collapsed')
-    st.markdown(STYLE,unsafe_allow_html=True)
-    st.caption(f'MECHA LAB / MISSION {num:02d}')
-    st.title(CONFIG[num][0])
-    st.caption('빨간 관절을 클릭한 뒤 마우스를 원형으로 움직여 회전시키세요. 관절별 감도가 다릅니다. 그리퍼로 잡거나 놓으세요.')
-    html=(ROOT/'assets'/'game.html').read_text(encoding='utf-8').replace('__MISSION__',str(num)).replace('__LIMIT__',str(CONFIG[num][1]))
-    components.html(html,height=660,scrolling=False)
-    if st.button('← 미션 선택 화면으로 돌아가기',use_container_width=True):st.switch_page('main.py')
+
+BASE=Path(__file__).resolve().parent
+CONFIG={
+ 'rock':{'title':'화성 암석 집기','duration':180,'description':'암석에 그리퍼를 접근시켜 집은 뒤 위쪽 목표 구역에 놓으세요.'},
+ 'battery':{'title':'배터리 분리하기','duration':300,'description':'배터리 중앙을 집은 후 오른쪽으로 잡아당겨 게이지를 채우세요.'},
+ 'satellite':{'title':'위성 수리','duration':420,'description':'장애물을 집어 치운 뒤 버튼을 누르고 스위치를 잡아 오른쪽으로 당기세요.'}
+}
+def run(mission):
+ st.set_page_config(page_title='MECHA LAB',page_icon='🦾',layout='wide',initial_sidebar_state='collapsed')
+ st.markdown('''<style>[data-testid="stSidebar"],[data-testid="stSidebarNav"],[data-testid="stSidebarCollapsedControl"]{display:none!important}.block-container{max-width:1180px;padding-top:1rem}.stApp{background:#131a24;color:#f1e6d8}</style>''',unsafe_allow_html=True)
+ cfg=CONFIG[mission]
+ st.title('🦾 '+cfg['title'])
+ st.caption(cfg['description'])
+ template=(BASE/'assets'/'game.html').read_text(encoding='utf-8')
+ html=template.replace('__GAME_CONFIG__',json.dumps({'mission':mission,**cfg},ensure_ascii=False))
+ components.html(html,height=685,scrolling=False)
+ if st.button('← 미션 선택 화면으로 돌아가기',use_container_width=True):st.switch_page('main.py')
+ st.caption('조작법: 빨간 관절을 드래그해서 회전 → 그리퍼를 대상에 접근 → [잡기/놓기] 버튼. 관절마다 감도가 다릅니다. 물리 판정은 교육용 간이 모델입니다.')
