@@ -1,5 +1,6 @@
 
 import streamlit as st
+from textwrap import dedent
 
 st.set_page_config(
     page_title="MECHA LAB | Space Robotics",
@@ -14,7 +15,7 @@ MISSIONS = [
         "icon": "🪨",
         "title": "화성 암석 집기",
         "english": "MARS SAMPLE COLLECTION",
-        "description": "화성 표면의 암석 시료를 집어 샘플 보관함으로 운반하세요.",
+        "description": "화성 표면의 암석을 집어 샘플 보관함으로 운반하세요.",
         "time": "01:30",
         "path": "pages/1_화성_암석_집기.py"
     },
@@ -22,8 +23,8 @@ MISSIONS = [
         "number": "02",
         "icon": "🔋",
         "title": "배터리 분리하기",
-        "english": "ORBITAL BATTERY EXTRACTION",
-        "description": "잠금장치를 해제하고 배터리를 안전하게 분리하세요.",
+        "english": "BATTERY EXTRACTION",
+        "description": "잠금장치를 해제한 뒤 배터리를 안전하게 추출하세요.",
         "time": "02:00",
         "path": "pages/2_배터리_분리.py"
     },
@@ -31,8 +32,8 @@ MISSIONS = [
         "number": "03",
         "icon": "🛰️",
         "title": "위성 수리",
-        "english": "SATELLITE REPAIR OPERATION",
-        "description": "버튼, 스위치, 전선, 안테나를 정비해 위성을 복구하세요.",
+        "english": "SATELLITE REPAIR",
+        "description": "제어 버튼, 전선 연결, 안테나 정렬을 완료하세요.",
         "time": "04:00",
         "path": "pages/3_위성_수리.py"
     }
@@ -52,21 +53,17 @@ st.markdown("""
 .stApp {
     background:
         radial-gradient(
-            ellipse at 55% 10%,
-            #23354b 0%,
-            #111c2b 40%,
+            ellipse at 50% 15%,
+            #24374d 0%,
+            #111d2d 43%,
             #090f19 100%
         );
     color: #f3eee7;
 }
 
 .block-container {
-    max-width: 1150px;
+    max-width: 1120px;
     padding-top: 2rem;
-}
-
-#MainMenu, footer {
-    visibility: hidden;
 }
 
 h1, h2, h3 {
@@ -74,19 +71,19 @@ h1, h2, h3 {
 }
 
 .hero {
-    text-align: center;
-    padding: 65px 20px 48px;
-    border: 1px solid #34495c;
-    border-radius: 22px;
-    background:
-        radial-gradient(
-            circle at 50% 25%,
-            #33465a 0%,
-            #172637 40%,
-            #101927 85%
-        );
     position: relative;
     overflow: hidden;
+    text-align: center;
+    padding: 75px 24px 65px;
+    border: 1px solid #41576b;
+    border-radius: 24px;
+    background:
+        radial-gradient(
+            ellipse at 50% 28%,
+            #34485b 0%,
+            #18283a 48%,
+            #101927 100%
+        );
 }
 
 .hero::before {
@@ -94,131 +91,139 @@ h1, h2, h3 {
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(#ffffff06 1px,transparent 1px),
-        linear-gradient(90deg,#ffffff06 1px,transparent 1px);
+        linear-gradient(#ffffff06 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff06 1px, transparent 1px);
     background-size: 44px 44px;
     pointer-events: none;
 }
 
-.robot-icon {
-    font-size: 78px;
-    margin-bottom: 18px;
-    animation: floatRobot 4s ease-in-out infinite;
+.system {
+    position: relative;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #86e5bf;
 }
 
-@keyframes floatRobot {
-    0%,100% {transform:translateY(0)}
-    50% {transform:translateY(-12px)}
+.robot-icon {
+    position: relative;
+    margin-top: 35px;
+    font-size: 88px;
+    animation: floating 4s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
 }
 
 .hero-title {
-    font-size: clamp(52px,9vw,105px);
+    position: relative;
+    margin-top: 15px;
+    font-size: clamp(52px, 9vw, 105px);
     font-weight: 900;
-    letter-spacing: 6px;
-    line-height: 1.12;
-    color: #f5eee4;
-    text-shadow: 5px 5px 0px #a46b56;
+    letter-spacing: 7px;
+    line-height: 1.2;
+    color: #f6efe6;
+    text-shadow: 5px 5px 0 #a66b55;
 }
 
 .hero-sub {
+    position: relative;
+    margin-top: 18px;
     font-size: 14px;
     letter-spacing: 5px;
-    color: #83c9cd;
-    margin-top: 18px;
+    color: #8acdd3;
 }
 
 .hero-desc {
+    position: relative;
     margin-top: 28px;
+    color: #c6d4de;
     font-size: 17px;
-    color: #c0cfda;
-    line-height: 1.9;
+    line-height: 2;
 }
 
-.system {
-    color: #81d9b7;
-    font-size: 12px;
+.hero-bottom {
+    position: relative;
+    margin-top: 36px;
+    color: #8fa9ba;
+    font-size: 11px;
     letter-spacing: 2px;
-    font-weight: bold;
-    margin-bottom: 20px;
 }
 
 .section-label {
     color: #e8ac85;
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 3px;
-    font-size: 13px;
-    font-weight: bold;
 }
 
 .mission-card {
-    background: linear-gradient(
-        135deg,
-        #1c3042,
-        #172535
-    );
-    border: 1px solid #455d6f;
-    border-radius: 15px;
-    padding: 22px;
-    min-height: 160px;
-    margin-top: 10px;
-    transition: all .2s ease;
-}
-
-.mission-card:hover {
-    border-color: #edaf85;
-    transform: translateY(-2px);
-}
-
-.mission-icon {
-    font-size: 42px;
+    background: linear-gradient(135deg, #213447, #152333);
+    border: 1px solid #456074;
+    border-radius: 16px;
+    padding: 24px;
+    min-height: 305px;
     margin-bottom: 12px;
 }
 
 .mission-number {
-    color: #f1b08c;
+    color: #f0b08b;
     font-size: 12px;
     letter-spacing: 2px;
-    font-weight: bold;
+    font-weight: 800;
+}
+
+.mission-icon {
+    margin-top: 24px;
+    font-size: 51px;
 }
 
 .mission-title {
+    margin-top: 14px;
+    color: #f5eee7;
     font-size: 23px;
-    font-weight: 800;
-    margin-top: 7px;
-    color: #f3ede7;
+    font-weight: 850;
 }
 
 .mission-en {
-    color: #8dc9cc;
+    margin-top: 7px;
+    color: #89c9ce;
     font-size: 11px;
-    letter-spacing: 1.5px;
-    margin-top: 6px;
+    letter-spacing: 1px;
 }
 
 .mission-desc {
-    color: #b9c7d1;
-    font-size: 13px;
-    margin-top: 13px;
+    margin-top: 19px;
+    color: #bdcbd6;
     line-height: 1.7;
+    font-size: 13px;
+    min-height: 44px;
 }
 
 .mission-time {
-    color: #f4c68e;
-    font-size: 17px;
+    margin-top: 16px;
+    color: #f3ca8d;
+    font-size: 19px;
     font-weight: 800;
-    margin-top: 18px;
 }
 
 .stButton > button {
     background: #d98d63;
-    border: 1px solid #e9b391;
+    border: 1px solid #eab794;
     color: #172333;
-    border-radius: 10px;
     font-weight: 800;
-    min-height: 48px;
+    border-radius: 11px;
+    min-height: 50px;
 }
 
 .stButton > button:hover {
-    background: #f1b48b;
+    background: #f1b78f;
     color: #172333;
     border-color: #ffcfab;
 }
@@ -236,7 +241,8 @@ def back_to_cover():
 
 if not st.session_state.mecha_started:
 
-    st.markdown("""
+    # dedent를 이용해 HTML 들여쓰기를 제거
+    hero_html = dedent("""
     <div class="hero">
         <div class="system">
             ● SYSTEM ONLINE / ALL MODULES READY
@@ -244,9 +250,7 @@ if not st.session_state.mecha_started:
 
         <div class="robot-icon">🦾</div>
 
-        <div class="hero-title">
-            MECHA LAB
-        </div>
+        <div class="hero-title">MECHA LAB</div>
 
         <div class="hero-sub">
             SPACE ROBOTICS DIVISION
@@ -257,46 +261,36 @@ if not st.session_state.mecha_started:
             당신의 손끝에서 세 가지 임무가 시작됩니다.
         </div>
 
-        <div style="
-            margin-top:38px;
-            color:#8fa9ba;
-            font-size:12px;
-            letter-spacing:2px;
-        ">
+        <div class="hero-bottom">
             ENGINEERING · CONTROL · PRECISION
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """).strip()
+
+    st.markdown(hero_html, unsafe_allow_html=True)
 
     st.write("")
 
-    if st.button(
+    st.button(
         "▶  INITIALIZE MISSION",
         key="start",
         use_container_width=True,
-        type="primary",
         on_click=start_game
-    ):
-        pass
+    )
 
     st.markdown(
-        """
-        <p style="
-            text-align:center;
-            color:#7f96a7;
-            font-size:12px;
-            margin-top:25px;
-        ">
-            3 MISSIONS AVAILABLE · MECHA LAB
-        </p>
-        """,
+        '<p style="text-align:center;color:#8299aa;'
+        'font-size:12px;margin-top:25px">'
+        '3 MISSIONS AVAILABLE · MECHA LAB</p>',
         unsafe_allow_html=True
     )
 
 else:
 
     st.markdown(
-        '<div class="section-label">MISSION CONTROL / 001</div>',
+        '<div class="section-label">'
+        'MISSION CONTROL / SELECT OPERATION'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -312,51 +306,36 @@ else:
     columns = st.columns(3, gap="medium")
 
     for col, mission in zip(columns, MISSIONS):
-
         with col:
 
+            # HTML을 한 줄 문자열로 결합해 렌더링 오류 방지
+            card_html = (
+                '<div class="mission-card">'
+                f'<div class="mission-number">MISSION {mission["number"]}</div>'
+                f'<div class="mission-icon">{mission["icon"]}</div>'
+                f'<div class="mission-title">{mission["title"]}</div>'
+                f'<div class="mission-en">{mission["english"]}</div>'
+                f'<div class="mission-desc">{mission["description"]}</div>'
+                f'<div class="mission-time">⏱ {mission["time"]}</div>'
+                '</div>'
+            )
+
             st.markdown(
-                f"""
-                <div class="mission-card">
-                    <div class="mission-number">
-                        MISSION {mission['number']}
-                    </div>
-
-                    <div class="mission-icon">
-                        {mission['icon']}
-                    </div>
-
-                    <div class="mission-title">
-                        {mission['title']}
-                    </div>
-
-                    <div class="mission-en">
-                        {mission['english']}
-                    </div>
-
-                    <div class="mission-desc">
-                        {mission['description']}
-                    </div>
-
-                    <div class="mission-time">
-                        ⏱ {mission['time']}
-                    </div>
-                </div>
-                """,
+                card_html,
                 unsafe_allow_html=True
             )
 
             if st.button(
-                f"MISSION {mission['number']} 시작 →",
-                key=f"mission_{mission['number']}",
+                f'MISSION {mission["number"]} 시작 →',
+                key=f'mission_{mission["number"]}',
                 use_container_width=True
             ):
                 st.switch_page(mission["path"])
 
     st.write("")
 
-    if st.button(
+    st.button(
         "← 타이틀 화면으로 돌아가기",
+        use_container_width=True,
         on_click=back_to_cover
-    ):
-        pass
+    )
