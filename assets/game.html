@@ -1,96 +1,128 @@
-
 <!doctype html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:#101924;
-  color:#edf4f5;
-  font:14px system-ui,"Malgun Gothic",sans-serif;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #101924;
+  color: #edf4f5;
+  font: 14px system-ui, "Malgun Gothic", sans-serif;
 }
-#app{
-  position:relative;
-  border:1px solid #385164;
-  border-radius:15px;
-  overflow:hidden;
+
+#app {
+  position: relative;
+  border: 1px solid #385164;
+  border-radius: 15px;
+  overflow: hidden;
 }
-header,footer{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px 18px;
-  background:#172b3d;
+
+header, footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #172b3d;
 }
-header{border-bottom:1px solid #4b6574}
-footer{justify-content:flex-start;flex-wrap:wrap}
-small{
-  display:block;
-  font:700 11px monospace;
-  color:#99c5d5;
-  letter-spacing:2px;
+
+header {
+  border-bottom: 1px solid #4b6574;
 }
-h2{margin:4px 0 0;font-size:20px}
-#clock{
-  font:bold 30px monospace;
-  color:#ffd087;
+
+footer {
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
-#clock.red{
-  color:#ff6464;
-  animation:pulse .8s infinite alternate;
+
+small {
+  display: block;
+  font: 700 11px monospace;
+  color: #99c5d5;
+  letter-spacing: 2px;
 }
-@keyframes pulse{to{opacity:.45}}
-canvas{
-  display:block;
-  width:100%;
-  height:480px;
-  background:#152b3e;
-  touch-action:none;
-  cursor:crosshair;
+
+h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
 }
-button{
-  color:white;
-  background:#344d60;
-  border:1px solid #708c9c;
-  border-radius:9px;
-  padding:11px 14px;
-  font-weight:bold;
-  cursor:pointer;
+
+#clock {
+  font: bold 30px monospace;
+  color: #ffd087;
 }
-button.primary{
-  background:#d88a60;
-  color:#182431;
-  border-color:#ffc099;
+
+#clock.red {
+  color: #ff6464;
+  animation: pulse .8s infinite alternate;
 }
-#hint{
-  flex:1;
-  min-width:250px;
-  color:#d3dfe2;
-  font-size:13px;
+
+@keyframes pulse {
+  to { opacity: .45; }
 }
-#overlay{
-  display:none;
-  position:absolute;
-  inset:0;
-  z-index:30;
-  align-items:center;
-  justify-content:center;
-  background:#07121ce8;
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 500px;
+  background: #152b3e;
+  touch-action: none;
+  cursor: crosshair;
 }
-#overlay.show{display:flex}
-.dialog{
-  text-align:center;
-  background:#22394b;
-  border:1px solid #9bb9c5;
-  border-radius:18px;
-  padding:32px;
-  min-width:290px;
+
+button {
+  color: white;
+  background: #344d60;
+  border: 1px solid #708c9c;
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-weight: bold;
+  cursor: pointer;
 }
-.dialog h1{font-size:45px;margin:9px 0}
+
+button.primary {
+  background: #d88a60;
+  color: #182431;
+  border-color: #ffc099;
+}
+
+#hint {
+  flex: 1;
+  min-width: 250px;
+  color: #d3dfe2;
+  font-size: 13px;
+}
+
+#overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  background: #07121ce8;
+}
+
+#overlay.show {
+  display: flex;
+}
+
+.dialog {
+  text-align: center;
+  background: #22394b;
+  border: 1px solid #9bb9c5;
+  border-radius: 18px;
+  padding: 32px;
+  min-width: 290px;
+}
+
+.dialog h1 {
+  font-size: 45px;
+  margin: 9px 0;
+}
 </style>
 </head>
 <body>
@@ -110,9 +142,7 @@ button.primary{
 <canvas id="game"></canvas>
 
 <footer>
-  <button class="primary" id="action">
-    집게 닫기 / 열기 (Space)
-  </button>
+  <button class="primary" id="action">집게 닫기 / 열기 (Space)</button>
   <button id="restart">다시 시작</button>
   <div id="hint">관절을 움직여 목표에 접근하세요.</div>
 </footer>
@@ -124,815 +154,826 @@ button.primary{
     <p id="detail"></p>
     <button class="primary" id="retry">다시 도전</button>
     <p style="font-size:12px;color:#b6cbd4">
-      미션 선택 화면으로 돌아가려면
-      게임 아래의 Streamlit 버튼을 이용하세요.
+      미션 선택 화면으로 돌아가려면 게임 아래의 Streamlit 버튼을 이용하세요.
     </p>
   </div>
 </div>
 </div>
 
 <script>
-const cfg=__GAME_CONFIG__;
+const cfg = __GAME_CONFIG__;
 
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-const clock=document.getElementById("clock");
-const hint=document.getElementById("hint");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const clock = document.getElementById("clock");
+const hint = document.getElementById("hint");
 
-document.getElementById("title").textContent=cfg.title;
+document.getElementById("title").textContent = cfg.title;
 
-const W=1000,H=480;
-const base={x:115,y:421};
-const lengths=[222,241,194];
-const sensitivity=[.53,.78,1.08];
+const W = 1000;
+const H = 500;
 
-const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const base = { x: 115, y: 430 };
+const lengths = [222, 241, 194];
+const sensitivity = [0.53, 0.78, 1.08];
 
-let angles,points,drag,lastPointer;
-let held,done,phase,grabOffset;
-let rock,battery,cover,switchX;
-let progress,started,last;
-let wireIndex,wires,antenna;
-let timeLimit;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-const tasks=[
+let angles, points, drag, lastPointer;
+let held, done, phase, grabOffset;
+let rock, battery, cover, switchX;
+let progress, started, last, timeLimit;
+let wires, wireHeldIndex, antennaTip;
+
+const satelliteTasks = [
   "보호 덮개 제거",
   "제어 버튼 누르기",
   "슬라이드 스위치 작동",
-  "전선 색상 맞춰 연결",
+  "전선 4개 색상 맞춰 연결",
   "안테나 정렬 및 고정"
 ];
 
-function fit(){
-  const r=devicePixelRatio||1;
-  canvas.width=Math.round(canvas.clientWidth*r);
-  canvas.height=Math.round(480*r);
-  ctx.setTransform(
-    canvas.width/W,0,0,canvas.height/H,0,0
-  );
+const antennaDock = { x: 857, y: 170 };
+
+function fit() {
+  const r = devicePixelRatio || 1;
+  canvas.width = Math.round(canvas.clientWidth * r);
+  canvas.height = Math.round(500 * r);
+  ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
 }
 
-function box(x,y,w,h,color,r=0){
-  ctx.fillStyle=color;
+function box(x, y, w, h, color, r = 0) {
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.roundRect(x,y,w,h,r);
+  ctx.roundRect(x, y, w, h, r);
   ctx.fill();
 }
 
-function line(x,y,X,Y,color,width){
-  ctx.strokeStyle=color;
-  ctx.lineWidth=width;
-  ctx.lineCap="round";
+function line(x, y, X, Y, color, width) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x,y);
-  ctx.lineTo(X,Y);
+  ctx.moveTo(x, y);
+  ctx.lineTo(X, Y);
   ctx.stroke();
 }
 
-function circle(x,y,r,color,border="",width=1){
+function circle(x, y, r, fill, stroke = "", width = 1) {
   ctx.beginPath();
-  ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fillStyle=color;
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = fill;
   ctx.fill();
-  if(border){
-    ctx.strokeStyle=border;
-    ctx.lineWidth=width;
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = width;
     ctx.stroke();
   }
 }
 
-function label(s,x,y,size=14,color="#e4eef1"){
-  ctx.font=`bold ${size}px system-ui`;
-  ctx.fillStyle=color;
-  ctx.fillText(s,x,y);
+function label(text, x, y, size = 14, color = "#e4eef1", bold = true) {
+  ctx.font = `${bold ? "700" : "500"} ${size}px system-ui`;
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
 }
 
-function tell(s){
-  hint.textContent=s;
+function tell(text) {
+  hint.textContent = text;
 }
 
-// 로봇팔 순기구학
-function arm(){
-  points=[{...base}];
-  let a=0;
-  for(let i=0;i<3;i++){
-    a+=angles[i];
-    const p=points[i];
+function missionSeconds() {
+  if (cfg.mission === "rock") return 90;
+  if (cfg.mission === "battery") return 120;
+  return 180;
+}
+
+// 순기구학
+function arm() {
+  points = [{ ...base }];
+  let a = 0;
+
+  for (let i = 0; i < 3; i++) {
+    a += angles[i];
+    const p = points[i];
     points.push({
-      x:p.x+Math.cos(a)*lengths[i],
-      y:p.y+Math.sin(a)*lengths[i]
+      x: p.x + Math.cos(a) * lengths[i],
+      y: p.y + Math.sin(a) * lengths[i]
     });
   }
+
   return points[3];
 }
 
-// 실제 그리퍼 끝의 접촉점
-function gripPoint(){
-  const wrist=arm();
-  const a=angles.reduce((s,v)=>s+v,0);
+// 실제 집게 끝
+function gripPoint() {
+  const wrist = arm();
+  const a = angles.reduce((s, v) => s + v, 0);
   return {
-    x:wrist.x+61*Math.cos(a),
-    y:wrist.y+61*Math.sin(a)
+    x: wrist.x + 61 * Math.cos(a),
+    y: wrist.y + 61 * Math.sin(a)
   };
 }
 
-// 현재 조작해야 하는 대상 좌표
-function target(){
-  if(cfg.mission==="rock")return rock;
+function nearestLooseWire() {
+  const p = gripPoint();
+  let idx = -1;
+  let best = 9999;
 
-  if(cfg.mission==="battery"){
-    return phase===0
-      ?{x:582,y:296}
-      :battery;
+  wires.forEach((w, i) => {
+    if (w.connected) return;
+    const d = distance(p, w.pos);
+    if (d < best) {
+      best = d;
+      idx = i;
+    }
+  });
+
+  return best <= 28 ? idx : -1;
+}
+
+function target() {
+  if (cfg.mission === "rock") return rock;
+
+  if (cfg.mission === "battery") {
+    return phase === 0 ? { x: 553, y: 300 } : battery;
   }
 
-  if(phase===0)return cover;
-  if(phase===1)return{x:698,y:294};
-  if(phase===2)return{x:switchX,y:239};
-  if(phase===3)return wires[wireIndex].pos;
-  return antenna;
+  if (phase === 0) return cover;
+  if (phase === 1) return { x: 744, y: 290 };
+  if (phase === 2) return { x: switchX, y: 254 };
+  if (phase === 3) {
+    const idx = nearestLooseWire();
+    return idx >= 0 ? wires[idx].pos : { x: -999, y: -999 };
+  }
+  return antennaTip;
 }
 
-// 엄격한 접촉 판정
-function limit(){
-  if(cfg.mission==="rock")return 30;
+function limit() {
+  if (cfg.mission === "rock") return 26;
+  if (cfg.mission === "battery") return phase === 0 ? 23 : 26;
 
-  if(cfg.mission==="battery"){
-    return phase===0?25:29;
+  if (phase === 0) return 27;
+  if (phase === 1) return 21;
+  if (phase === 2) return 24;
+  if (phase === 3) return 28;
+  return 24;
+}
+
+function canInteract() {
+  if (done || held) return false;
+
+  if (cfg.mission === "satellite" && phase === 3) {
+    return nearestLooseWire() !== -1;
   }
 
-  if(phase===1)return 23;
-  if(phase===3)return 27;
-  if(phase===4)return 26;
-  return 29;
+  return distance(gripPoint(), target()) <= limit();
 }
 
-function canInteract(){
-  return !done&&!held&&
-    distance(gripPoint(),target())<=limit();
+function backgroundStars() {
+  for (let i = 0; i < 34; i++) {
+    circle(
+      25 + (i * 29) % 950,
+      22 + (i * 41) % 410,
+      i % 3 === 0 ? 2 : 1.2,
+      "rgba(210,235,255,.65)"
+    );
+  }
 }
 
-function background(){
-  if(cfg.mission==="rock"){
-    box(0,0,W,H,"#e7bb93");
-    box(0,335,W,145,"#cc946e");
+function drawBackground() {
+  if (cfg.mission === "rock") {
+    box(0, 0, W, H, "#d7a57c");
 
-    ctx.fillStyle="#b77c5e";
+    ctx.fillStyle = "#cc9167";
     ctx.beginPath();
-    ctx.moveTo(0,360);
-    ctx.bezierCurveTo(220,290,400,365,600,321);
-    ctx.bezierCurveTo(780,300,900,339,1000,311);
-    ctx.lineTo(1000,480);
-    ctx.lineTo(0,480);
+    ctx.moveTo(0, 315);
+    ctx.bezierCurveTo(160, 255, 240, 330, 390, 300);
+    ctx.bezierCurveTo(540, 270, 720, 326, 1000, 278);
+    ctx.lineTo(1000, H);
+    ctx.lineTo(0, H);
     ctx.fill();
 
-    box(0,428,W,52,"#a87358");
+    box(0, 432, W, 68, "#a96f53");
 
-    for(let i=0;i<17;i++){
-      circle(
-        33+i*57,
-        442+(i%3)*9,
-        3+(i%4),
-        "#865744"
-      );
+    for (let i = 0; i < 16; i++) {
+      circle(25 + i * 60, 446 + (i % 3) * 10, 3 + (i % 4), "#845340");
     }
 
-    label("MARS / SAMPLE SITE",22,32,14,"#624034");
+    label("MARS FIELD OPERATION / SAMPLE ACQUISITION", 22, 32, 14, "#5d3f32");
 
-  }else{
-    box(0,0,W,H,"#142d41");
+  } else if (cfg.mission === "battery") {
+    box(0, 0, W, H, "#142d41");
+    backgroundStars();
 
-    for(let x=0;x<W;x+=146){
-      line(x,0,x,H,"#28485d",2);
-    }
-    for(let y=0;y<H;y+=90){
-      line(0,y,W,y,"#28485d",2);
-    }
+    for (let x = 0; x < W; x += 145) line(x, 0, x, H, "#25485d", 2);
+    for (let y = 0; y < H; y += 92) line(0, y, W, y, "#25485d", 2);
 
-    box(0,444,W,36,"#254457");
+    box(0, 440, W, 60, "#254557");
+    label("ORBITAL SERVICE BAY / BATTERY EXTRACTION", 22, 32, 14, "#a9d4df");
 
-    label(
-      cfg.mission==="battery"
-        ?"ORBITAL SERVICE BAY"
-        :"SATELLITE REPAIR UNIT",
-      22,32,14,"#a9d4df"
-    );
+  } else {
+    box(0, 0, W, H, "#12273a");
+    backgroundStars();
+    box(0, 440, W, 60, "#203f52");
+    label("SATELLITE EVA REPAIR / EXTERNAL SYSTEM ACCESS", 22, 32, 14, "#b4dae7");
   }
 }
 
-function gauge(value,name){
-  box(758,57,220,64,"#20394b",10);
-  label(name,770,78,12,"#c3dce3");
-  box(770,91,194,13,"#435766",6);
+function gauge(value, title) {
+  box(748, 58, 226, 64, "#20394b", 10);
+  label(title, 760, 80, 12, "#c3dce3");
+  box(760, 94, 200, 13, "#435766", 6);
+  box(760, 94, 200 * clamp(value, 0, 1), 13, "#87d7a5", 6);
+}
+
+function drawRockMission() {
+  const near = canInteract();
+
+  // 샘플 빈: 더 왼쪽
+  box(430, 220, 170, 118, "#8fae9a", 12);
+  box(445, 235, 140, 82, "#42655d", 10);
+  box(455, 248, 120, 50, "#2f5149", 8);
+  box(470, 211, 88, 16, "#b9d1c0", 8);
+
+  line(600, 280, 655, 280, "#b9d1c0", 10);
+  circle(662, 280, 16, "#a6c5b2", "#ecf7f2", 3);
+
+  label("SAMPLE RECEIVER", 432, 203, 13, "#4a3d37");
+  label("DROP HERE", 470, 332, 13, "#d9f5dc");
+
+  // 암석: 더 오른쪽
+  circle(
+    rock.x, rock.y, 28,
+    "#9b644a",
+    near ? "#89e9b2" : "#ebc4a0",
+    near ? 5 : 3
+  );
+  circle(rock.x - 9, rock.y - 8, 8, "#bf8765");
+  circle(rock.x + 7, rock.y + 4, 6, "#6d4938");
+  label("CORE SAMPLE", rock.x - 37, rock.y - 42, 12, "#5d3d32");
+
+  // 화성 장비 느낌
+  box(730, 250, 110, 18, "#d8c08f", 6);
+  box(812, 236, 18, 80, "#c9a56b", 4);
+  line(760, 250, 780, 215, "#d8c08f", 5);
+  line(790, 250, 820, 225, "#d8c08f", 5);
+}
+
+function drawBatteryMission() {
+  const near = canInteract();
+
+  box(505, 220, 282, 165, "#667f8c", 16);
+  box(523, 243, 246, 124, "#253c4e", 12);
+  box(550, 278, 190, 72, "#3d5a68", 8);
+
+  // 경고 줄무늬
+  for (let i = 0; i < 6; i++) {
+    box(512 + i * 22, 219, 14, 10, i % 2 ? "#1d2a34" : "#f0bf57", 2);
+  }
+
+  // 레일
+  box(548, 355, 193, 6, "#b5c8ce", 3);
+
+  // 잠금장치
   box(
-    770,91,
-    194*clamp(value,0,1),
-    13,"#87d7a5",6
+    540, 282, 26, 36,
+    phase === 0 ? (near ? "#86e4af" : "#e56b62") : "#7ac6a5",
+    5
+  );
+  box(542, 285, 22, 8, "#e9f1f5", 3);
+  label(phase === 0 ? "LOCK" : "OPEN", 525, 257, 13, "#d8edf1");
+
+  // 배터리
+  box(battery.x - 34, battery.y - 28, 72, 56, "#f3c36a", 8);
+  box(battery.x - 28, battery.y - 21, 58, 12, "#f9e3ad", 3);
+  box(battery.x + 19, battery.y - 8, 8, 16, "#425a67", 2);
+  label("Li-ion", battery.x - 24, battery.y + 12, 14, "#30424f");
+
+  gauge(phase === 0 ? 0 : progress, "배터리 분리 진행률");
+
+  label(
+    phase === 0
+      ? "① 빨간 잠금장치를 해제하세요."
+      : "② 배터리를 집고 오른쪽으로 천천히 추출하세요.",
+    470, 408, 13
   );
 }
 
-function drawSatellite(){
-  const near=canInteract();
+function satelliteProgressValue() {
+  if (phase < 3) return phase / 5;
+  if (phase === 3) {
+    const connected = wires.filter(w => w.connected).length;
+    return 3 / 5 + (connected / 4) * (1 / 5);
+  }
+  return 4 / 5;
+}
 
-  box(620,155,334,270,"#526f83",15);
-  box(635,170,304,239,"#243e52",10);
+function drawSatelliteMission() {
+  const near = canInteract();
 
-  label(
-    "STEP "+(phase+1)+"/5",
-    645,193,15,"#a8d9e4"
-  );
-  label(tasks[phase],645,218,14,"#e4f2f4");
+  // 태양 전지판
+  box(525, 205, 120, 150, "#2d4e68", 8);
+  box(865, 205, 120, 150, "#2d4e68", 8);
 
-  if(phase===0){
+  for (let i = 0; i < 4; i++) {
+    line(555 + i * 22, 215, 555 + i * 22, 345, "#5f91b3", 2);
+    line(895 + i * 22, 215, 895 + i * 22, 345, "#5f91b3", 2);
+  }
+  for (let j = 0; j < 4; j++) {
+    line(535, 225 + j * 28, 635, 225 + j * 28, "#5f91b3", 2);
+    line(875, 225 + j * 28, 975, 225 + j * 28, "#5f91b3", 2);
+  }
+
+  // 위성 본체
+  box(610, 155, 290, 260, "#5d7d90", 18);
+  box(628, 173, 254, 224, "#223e52", 12);
+
+  // 상단 안테나 베이스
+  line(760, 210, 785, 245, "#bfcfd6", 5);
+  line(800, 175, 820, 218, "#bfcfd6", 5);
+
+  label(`STEP ${phase + 1} / 5`, 640, 198, 15, "#9fd0df");
+  label(satelliteTasks[phase], 640, 222, 14, "#ecf7f9");
+
+  if (phase === 0) {
     box(
-      cover.x-36,cover.y-29,
-      72,58,
-      near?"#91e6b5":"#d7b080",
-      7
+      cover.x - 36, cover.y - 30, 72, 60,
+      near ? "#91e6b5" : "#d6af80", 8
     );
-    box(
-      cover.x-25,cover.y-18,
-      50,36,"#e9c89c",4
-    );
-    label("COVER",cover.x-32,cover.y-40,12);
+    box(cover.x - 23, cover.y - 16, 46, 32, "#e9c89c", 4);
+    label("ACCESS COVER", cover.x - 42, cover.y - 42, 12);
 
-  }else if(phase===1){
+  } else if (phase === 1) {
     circle(
-      698,294,20,
-      near?"#8bf1b0":"#dc6964",
-      "#f4e7df",4
+      744, 290, 20,
+      near ? "#8bf1b0" : "#dc6964",
+      "#f5e7e0", 4
     );
-    label("PUSH",675,335,13);
+    label("MAIN RESET", 708, 332, 12);
 
-  }else if(phase===2){
-    box(657,252,198,8,"#94adb9",4);
+  } else if (phase === 2) {
+    box(690, 248, 150, 10, "#a0b7c1", 4);
     box(
-      switchX-15,223,30,33,
-      near?"#8bf1b0":"#e4c37c",5
+      switchX - 16, 238, 32, 30,
+      near ? "#8bf1b0" : "#e4c37c", 5
     );
-    label("SLIDE RIGHT",670,283,13);
+    label("POWER SLIDER", 692, 285, 12);
 
-  }else if(phase===3){
-    const sockets=[
-      {x:828,y:280,color:"#eb6564"},
-      {x:828,y:344,color:"#61b8f0"}
-    ];
+  } else if (phase === 3) {
+    // 소켓 위치
+    wires.forEach(w => {
+      const s = w.socket;
+      circle(s.x, s.y, 16, "#203646", w.color, 5);
+    });
 
-    wires.forEach((w,i)=>{
-      const s=sockets[i];
-
-      line(
-        624,w.pos.y,
-        w.pos.x,w.pos.y,
-        w.color,5
-      );
-
+    // 뒤죽박죽 전선
+    wires.forEach(w => {
+      line(640, w.home.y, w.pos.x, w.pos.y, w.color, 5);
       circle(
-        w.pos.x,w.pos.y,13,
-        w.connected?"#83e5af":w.color,
-        "#e4eff1",2
+        w.pos.x, w.pos.y, 12,
+        w.connected ? "#8ce8b2" : w.color,
+        "#e5eff1", 2
       );
-
-      circle(
-        s.x,s.y,15,
-        "#263d50",
-        s.color,5
-      );
-
-      label(
-        i===0?"RED":"BLUE",
-        s.x-19,s.y-25,12,
-        s.color
-      );
-
-      if(w.connected){
-        line(
-          624,w.pos.y,
-          s.x,s.y,
-          w.color,5
-        );
+      if (w.connected) {
+        line(w.home.x, w.home.y, w.socket.x, w.socket.y, w.color, 5);
       }
     });
 
-    label(
-      "같은 색 소켓에 전선을 연결하세요",
-      642,390,13
-    );
+    label("COLOR HARNESS", 642, 378, 12);
+    label("색이 같은 소켓에 연결", 760, 378, 12);
 
-  }else{
-    line(
-      690,338,
-      antenna.x,antenna.y,
-      "#e7b46e",13
-    );
-
+  } else if (phase === 4) {
+    // 안테나 암
+    line(728, 320, antennaTip.x, antennaTip.y, "#d4b176", 13);
     circle(
-      antenna.x,antenna.y,17,
-      near?"#8bf1b0":"#dfb875",
-      "#f3e4c7",3
+      antennaTip.x, antennaTip.y, 16,
+      near ? "#8cf1b1" : "#deb773",
+      "#f1e4c7", 3
     );
 
-    circle(
-      790,160,13,
-      "#24465b","#89e8b0",4
-    );
-
-    line(
-      790,160,790,128,
-      "#89e8b0",3
-    );
-
-    label("DOCK",764,116,13,"#a6e8c2");
-    label(
-      "안테나 끝을 초록색 결합부에 맞추세요",
-      635,388,13
-    );
+    // 도킹 지점
+    circle(antennaDock.x, antennaDock.y, 14, "#213a49", "#89e8b0", 4);
+    line(antennaDock.x, antennaDock.y, antennaDock.x, antennaDock.y - 30, "#89e8b0", 3);
+    label("DOCK", antennaDock.x - 18, antennaDock.y - 40, 12, "#a6e8c2");
+    label("안테나 끝을 도킹 포인트에 맞추세요", 642, 378, 12);
   }
 
-  gauge(
-    phase/5+
-    (phase===3?wireIndex/10:0),
-    "위성 정비 진행률"
-  );
+  gauge(satelliteProgressValue(), "위성 정비 진행률");
 }
 
-function objects(){
-  const near=canInteract();
-
-  if(cfg.mission==="rock"){
-    box(555,290,147,92,"#91b3a5",10);
-    box(566,301,125,69,"#41675d",8);
-
-    label(
-      "SAMPLE BIN",
-      567,280,13,"#624034"
-    );
-
-    circle(
-      rock.x,rock.y,26,
-      "#9b634a",
-      near?"#83edb0":"#edc39c",
-      near?5:3
-    );
-
-    circle(
-      rock.x-8,rock.y-7,
-      7,"#ba8464"
-    );
-
-  }else if(cfg.mission==="battery"){
-    box(536,247,251,149,"#667f8c",14);
-    box(552,268,218,109,"#253c4e",10);
-    box(570,293,184,67,"#3d5a68",7);
-    box(570,365,185,5,"#adc5c9",3);
-
-    box(
-      battery.x-32,battery.y-26,
-      66,52,"#f3c36a",7
-    );
-
-    box(
-      battery.x-26,battery.y-20,
-      54,12,"#f9e3ad",3
-    );
-
-    label(
-      "Li-ion",
-      battery.x-25,
-      battery.y+13,14,"#324452"
-    );
-
-    box(
-      567,279,30,35,
-      phase===0
-        ?(near?"#82e3af":"#e56b62")
-        :"#7ac6a5",
-      5
-    );
-
-    label(
-      phase===0?"LOCK":"OPEN",
-      550,239,13
-    );
-
-    gauge(
-      phase===0?0:progress,
-      "배터리 분리 진행률"
-    );
-
-    label(
-      phase===0
-        ?"① 빨간 잠금장치를 해제하세요."
-        :"② 배터리를 잡고 오른쪽으로 당기세요.",
-      500,427,13
-    );
-
-  }else{
-    drawSatellite();
+function drawObjects() {
+  if (cfg.mission === "rock") {
+    drawRockMission();
+  } else if (cfg.mission === "battery") {
+    drawBatteryMission();
+  } else {
+    drawSatelliteMission();
   }
 }
 
-function drawArm(){
-  const wrist=arm();
+function drawArm() {
+  const wrist = arm();
 
-  box(54,422,128,54,"#293f50",8);
-  box(75,438,88,10,"#7296a1",4);
+  // 베이스
+  box(54, 423, 128, 56, "#293f50", 8);
+  box(75, 439, 88, 10, "#7296a1", 4);
 
-  for(let i=0;i<3;i++){
-    const a=points[i],b=points[i+1];
+  // 링크
+  for (let i = 0; i < 3; i++) {
+    const a = points[i];
+    const b = points[i + 1];
 
-    line(
-      a.x+5,a.y+5,
-      b.x+5,b.y+5,
-      "#263846",35
-    );
-    line(
-      a.x,a.y,b.x,b.y,
-      "#405e6e",30
-    );
-    line(
-      a.x,a.y,b.x,b.y,
-      "#abc4c9",19
-    );
-    line(
-      a.x+4,a.y-4,
-      b.x+4,b.y-4,
-      "#ece5d8",4
-    );
+    line(a.x + 5, a.y + 5, b.x + 5, b.y + 5, "#263846", 35);
+    line(a.x, a.y, b.x, b.y, "#405e6e", 30);
+    line(a.x, a.y, b.x, b.y, "#abc4c9", 19);
+    line(a.x + 4, a.y - 4, b.x + 4, b.y - 4, "#ece5d8", 4);
 
     circle(
-      a.x+(b.x-a.x)*.32,
-      a.y+(b.y-a.y)*.32,
-      6,"#e9a875","#405564",2
+      a.x + (b.x - a.x) * 0.32,
+      a.y + (b.y - a.y) * 0.32,
+      6, "#e9a875", "#405564", 2
     );
   }
 
-  for(let i=0;i<3;i++){
-    const p=points[i];
-
+  // 관절
+  for (let i = 0; i < 3; i++) {
+    const p = points[i];
+    circle(p.x, p.y, 20, "#324b5b", "#dce9ec", 4);
     circle(
-      p.x,p.y,20,
-      "#324b5b","#dce9ec",4
+      p.x, p.y, 13,
+      drag === i ? "#ffcb69" : "#da6d62",
+      "#2c4150", 3
     );
-
-    circle(
-      p.x,p.y,13,
-      drag===i?"#ffcb69":"#da6d62",
-      "#2c4150",3
-    );
-
-    circle(p.x,p.y,3,"#fff7df");
-
-    label(
-      "J"+(i+1),
-      p.x-11,p.y-26,12
-    );
+    circle(p.x, p.y, 3, "#fff7df");
+    label("J" + (i + 1), p.x - 11, p.y - 26, 12, "#bdd2da");
   }
 
-  const a=angles.reduce((s,v)=>s+v,0);
+  // 집게
+  const a = angles.reduce((s, v) => s + v, 0);
 
   ctx.save();
-  ctx.translate(wrist.x,wrist.y);
+  ctx.translate(wrist.x, wrist.y);
   ctx.rotate(a);
 
-  box(-4,-15,37,30,"#425e6d",6);
-  box(21,-10,23,20,"#c1d5d5",4);
+  box(-4, -15, 37, 30, "#425e6d", 6);
+  box(21, -10, 23, 20, "#c1d5d5", 4);
 
-  const g=held?7:20;
-
-  line(43,-g,56,-g,"#d9e7e6",9);
-  line(43,g,56,g,"#d9e7e6",9);
-
-  line(56,-g,70,-g+9,"#e49b72",7);
-  line(56,g,70,g-9,"#e49b72",7);
+  const g = held ? 7 : 19;
+  line(43, -g, 56, -g, "#d9e7e6", 9);
+  line(43, g, 56, g, "#d9e7e6", 9);
+  line(56, -g, 70, -g + 9, "#e49b72", 7);
+  line(56, g, 70, g - 9, "#e49b72", 7);
 
   ctx.restore();
 
-  const p=gripPoint();
-
+  // 접촉점
+  const p = gripPoint();
   circle(
-    p.x,p.y,5,
-    canInteract()?"#66f1a8":"#f6c67a",
-    "#183443",2
+    p.x, p.y, 5,
+    canInteract() ? "#66f1a8" : "#f6c67a",
+    "#183443", 2
   );
 }
 
-function draw(){
-  ctx.clearRect(0,0,W,H);
+function draw() {
+  ctx.clearRect(0, 0, W, H);
 
-  background();
-  objects();
+  drawBackground();
+  drawObjects();
   drawArm();
 
   label(
     "빨간 관절을 선택하고 원형으로 드래그",
-    20,68,13,
-    cfg.mission==="rock"?"#624338":"#b9dce3"
+    20, 68, 13,
+    cfg.mission === "rock" ? "#624338" : "#b9dce3"
   );
 
-  if(canInteract()){
+  if (canInteract()) {
     label(
-      "● 접촉 확인! 집게 버튼을 누르세요",
-      20,92,14,
-      cfg.mission==="rock"?"#357654":"#8ff2b3"
+      "● 접촉 확인! 지금 버튼을 눌러 조작할 수 있습니다",
+      20, 92, 14,
+      cfg.mission === "rock" ? "#2f7a52" : "#8ff2b3"
     );
   }
 }
 
-function finish(ok){
-  if(done)return;
-  done=true;
+function finish(success) {
+  if (done) return;
+  done = true;
 
-  const el=document.getElementById("outcome");
+  const outcome = document.getElementById("outcome");
+  outcome.textContent = success ? "SUCCESS" : "FAILED";
+  outcome.style.color = success ? "#a1efbb" : "#fc8179";
 
-  el.textContent=ok?"SUCCESS":"FAILED";
-  el.style.color=ok?"#a1efbb":"#fc8179";
+  document.getElementById("detail").textContent =
+    success
+      ? "모든 작업을 완료했습니다."
+      : "제한시간이 종료되었습니다.";
 
-  document.getElementById("detail").textContent=
-    ok
-      ?"모든 작업을 완료했습니다."
-      :"제한시간이 종료되었습니다.";
-
-  document.getElementById("overlay")
-    .classList.add("show");
+  document.getElementById("overlay").classList.add("show");
 }
 
-function advance(){
-  held=false;
-  grabOffset={x:0,y:0};
+function advance() {
+  held = false;
+  grabOffset = { x: 0, y: 0 };
   phase++;
 
-  if(phase>=5){
+  if (phase >= 5) {
     finish(true);
-  }else{
-    tell(
-      "다음 작업: "+tasks[phase]
-    );
+  } else {
+    tell("다음 작업: " + satelliteTasks[phase]);
   }
 }
 
-function action(){
-  if(done)return;
+function allWiresConnected() {
+  return wires.every(w => w.connected);
+}
 
-  const p=gripPoint();
-  const t=target();
+function action() {
+  if (done) return;
 
-  if(!held&&distance(p,t)>limit()){
-    tell(
-      "집게 끝을 목표에 정확히 맞춰 주세요."
-    );
+  const p = gripPoint();
+
+  // 배터리 잠금 해제
+  if (cfg.mission === "battery" && phase === 0) {
+    if (!canInteract()) {
+      tell("잠금장치에 집게 끝을 더 정확히 맞춰 주세요.");
+      return;
+    }
+    phase = 1;
+    tell("잠금 해제 성공! 배터리를 집고 오른쪽으로 추출하세요.");
     return;
   }
 
-  if(cfg.mission==="battery"&&phase===0){
-    phase=1;
-    tell(
-      "잠금 해제! 배터리를 잡고 오른쪽으로 당기세요."
-    );
-    return;
-  }
-
-  if(cfg.mission==="satellite"&&phase===1){
+  // 위성 버튼
+  if (cfg.mission === "satellite" && phase === 1) {
+    if (!canInteract()) {
+      tell("버튼 중심을 정확히 눌러야 합니다.");
+      return;
+    }
     advance();
     return;
   }
 
-  if(!held){
-    held=true;
-    grabOffset={
-      x:t.x-p.x,
-      y:t.y-p.y
+  // 잡기 시작
+  if (!held) {
+    if (cfg.mission === "satellite" && phase === 3) {
+      const idx = nearestLooseWire();
+      if (idx === -1) {
+        tell("연결할 전선 끝을 더 정확히 집어 주세요.");
+        return;
+      }
+      held = true;
+      wireHeldIndex = idx;
+      grabOffset = {
+        x: wires[idx].pos.x - p.x,
+        y: wires[idx].pos.y - p.y
+      };
+      tell("전선을 집었습니다. 같은 색의 소켓으로 이동하세요.");
+      return;
+    }
+
+    if (!canInteract()) {
+      tell("집게 끝을 목표에 더 정확히 맞춰 주세요.");
+      return;
+    }
+
+    const t = target();
+    held = true;
+    grabOffset = {
+      x: t.x - p.x,
+      y: t.y - p.y
     };
-
-    tell("물체를 잡았습니다. 이동한 뒤 놓으세요.");
+    tell("물체를 잡았습니다. 이동한 뒤 버튼을 다시 눌러 놓으세요.");
     return;
   }
 
-  held=false;
+  // 놓기
+  held = false;
 
-  if(cfg.mission==="rock"){
-    if(
-      rock.x>582&&rock.x<681&&
-      rock.y>305&&rock.y<363
-    ){
+  if (cfg.mission === "rock") {
+    if (
+      rock.x > 480 && rock.x < 560 &&
+      rock.y > 250 && rock.y < 305
+    ) {
       finish(true);
-    }else{
-      tell("암석을 SAMPLE BIN 안으로 이동하세요.");
+    } else {
+      tell("암석을 SAMPLE RECEIVER 안으로 정확히 옮기세요.");
     }
     return;
   }
 
-  if(cfg.mission==="satellite"){
-    if(phase===0){
-      if(cover.x<625){
+  if (cfg.mission === "battery") {
+    tell("배터리를 놓았습니다.");
+    return;
+  }
+
+  // 위성 수리
+  if (cfg.mission === "satellite") {
+    if (phase === 0) {
+      if (cover.x < 640) {
         advance();
-      }else{
-        tell("덮개를 왼쪽으로 더 옮기세요.");
+      } else {
+        tell("보호 덮개를 더 왼쪽으로 이동하세요.");
       }
+      return;
     }
 
-    else if(phase===2){
-      if(switchX>=825){
+    if (phase === 2) {
+      if (switchX >= 805) {
         advance();
-      }else{
-        tell("스위치를 오른쪽으로 더 당기세요.");
+      } else {
+        tell("슬라이더를 오른쪽 끝까지 더 밀어 주세요.");
       }
+      return;
     }
 
-    else if(phase===3){
-      const socket=wireIndex===0
-        ?{x:828,y:280}
-        :{x:828,y:344};
+    if (phase === 3) {
+      const wire = wires[wireHeldIndex];
+      if (!wire) {
+        tell("전선을 다시 잡아 주세요.");
+        return;
+      }
 
-      const wire=wires[wireIndex];
+      if (distance(wire.pos, wire.socket) <= 22) {
+        wire.pos = { ...wire.socket };
+        wire.connected = true;
+        wireHeldIndex = -1;
 
-      if(distance(wire.pos,socket)<=24){
-        wire.pos={...socket};
-        wire.connected=true;
-        wireIndex++;
-
-        if(wireIndex>=2){
+        if (allWiresConnected()) {
           advance();
-        }else{
-          tell(
-            "빨간 전선 연결 완료! 파란 전선을 연결하세요."
-          );
+        } else {
+          tell("좋아요! 남은 전선도 같은 색 소켓에 연결하세요.");
         }
-      }else{
-        wire.pos={...wire.home};
-        tell(
-          "소켓에 정확하게 맞지 않았습니다. 다시 시도하세요."
-        );
+      } else {
+        wire.pos = { ...wire.home };
+        wireHeldIndex = -1;
+        tell("색이 맞는 소켓에 더 정확히 연결해야 합니다.");
       }
+      return;
     }
 
-    else if(phase===4){
-      if(distance(antenna,{x:790,y:160})<=24){
+    if (phase === 4) {
+      if (distance(antennaTip, antennaDock) <= 20) {
         advance();
-      }else{
-        tell(
-          "안테나 끝을 초록색 결합부에 더 정확히 맞추세요."
-        );
+      } else {
+        tell("안테나 끝을 도킹 지점에 정확히 맞춰 주세요.");
       }
     }
   }
 }
 
-function mouse(e){
-  const r=canvas.getBoundingClientRect();
-
-  return{
-    x:(e.clientX-r.left)*W/r.width,
-    y:(e.clientY-r.top)*H/r.height
+function mouse(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * W / r.width,
+    y: (e.clientY - r.top) * H / r.height
   };
 }
 
-canvas.addEventListener("pointerdown",e=>{
-  if(done)return;
+canvas.addEventListener("pointerdown", e => {
+  if (done) return;
 
-  const p=mouse(e);
+  const p = mouse(e);
   arm();
 
-  let best=43;
-  drag=-1;
+  let best = 43;
+  drag = -1;
 
-  for(let i=0;i<3;i++){
-    const d=distance(p,points[i]);
-
-    if(d<best){
-      best=d;
-      drag=i;
+  for (let i = 0; i < 3; i++) {
+    const d = distance(p, points[i]);
+    if (d < best) {
+      best = d;
+      drag = i;
     }
   }
 
-  if(drag>=0){
-    lastPointer=p;
+  if (drag >= 0) {
+    lastPointer = p;
     canvas.setPointerCapture(e.pointerId);
   }
 });
 
-canvas.addEventListener("pointermove",e=>{
-  if(done||drag<0)return;
+canvas.addEventListener("pointermove", e => {
+  if (done || drag < 0) return;
 
-  const p=mouse(e);
-  const pivot=points[drag];
+  const p = mouse(e);
+  const pivot = points[drag];
 
-  const a=Math.atan2(
-    lastPointer.y-pivot.y,
-    lastPointer.x-pivot.x
+  const a = Math.atan2(
+    lastPointer.y - pivot.y,
+    lastPointer.x - pivot.x
   );
 
-  const b=Math.atan2(
-    p.y-pivot.y,
-    p.x-pivot.x
+  const b = Math.atan2(
+    p.y - pivot.y,
+    p.x - pivot.x
   );
 
-  const delta=Math.atan2(
-    Math.sin(b-a),
-    Math.cos(b-a)
+  const delta = Math.atan2(
+    Math.sin(b - a),
+    Math.cos(b - a)
   );
 
-  angles[drag]=clamp(
-    angles[drag]+delta*sensitivity[drag],
-    -2.85,2.85
+  angles[drag] = clamp(
+    angles[drag] + delta * sensitivity[drag],
+    -2.85, 2.85
   );
 
-  lastPointer=p;
+  lastPointer = p;
   draw();
 });
 
-for(const ev of [
-  "pointerup",
-  "pointercancel",
-  "lostpointercapture"
-]){
-  canvas.addEventListener(ev,()=>{
-    drag=-1;
-    lastPointer=null;
+for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) {
+  canvas.addEventListener(ev, () => {
+    drag = -1;
+    lastPointer = null;
   });
 }
 
-function tick(now){
-  const dt=clamp((now-last)/1000,0,.05);
-  last=now;
+function tick(now) {
+  const dt = clamp((now - last) / 1000, 0, 0.05);
+  last = now;
 
-  if(!done){
-    const remain=Math.max(
+  if (!done) {
+    const remain = Math.max(
       0,
-      Math.ceil(timeLimit-(now-started)/1000)
+      Math.ceil(timeLimit - (now - started) / 1000)
     );
 
-    clock.textContent=
-      String(Math.floor(remain/60)).padStart(2,"0")
-      +":"
-      +String(remain%60).padStart(2,"0");
+    clock.textContent =
+      String(Math.floor(remain / 60)).padStart(2, "0")
+      + ":"
+      + String(remain % 60).padStart(2, "0");
 
-    clock.classList.toggle("red",remain<=60);
+    clock.classList.toggle("red", remain <= 60);
 
-    if(remain===0){
+    if (remain === 0) {
       finish(false);
     }
 
-    if(held&&!done){
-      const p=gripPoint();
+    if (held && !done) {
+      const p = gripPoint();
 
-      if(cfg.mission==="rock"){
-        rock={
-          x:p.x+grabOffset.x,
-          y:p.y+grabOffset.y
+      if (cfg.mission === "rock") {
+        rock = {
+          x: p.x + grabOffset.x,
+          y: p.y + grabOffset.y
         };
       }
 
-      else if(cfg.mission==="battery"){
-        const desired=clamp(
-          p.x+grabOffset.x,
-          637,737
+      else if (cfg.mission === "battery") {
+        const desired = clamp(
+          p.x + grabOffset.x,
+          610, 720
         );
 
-        battery.x+=clamp(
-          desired-battery.x,
-          -105*dt,105*dt
+        battery.x += clamp(
+          desired - battery.x,
+          -110 * dt,
+          110 * dt
         );
 
-        progress=clamp(
-          (battery.x-637)/100,
-          0,1
+        progress = clamp(
+          (battery.x - 610) / 110,
+          0, 1
         );
 
-        if(progress>=.995){
+        if (progress >= 0.995) {
           finish(true);
         }
       }
 
-      else if(cfg.mission==="satellite"){
-        if(phase===0){
-          cover={
-            x:p.x+grabOffset.x,
-            y:p.y+grabOffset.y
+      else if (cfg.mission === "satellite") {
+        if (phase === 0) {
+          cover = {
+            x: p.x + grabOffset.x,
+            y: p.y + grabOffset.y
           };
         }
 
-        else if(phase===2){
-          switchX=clamp(
-            p.x+grabOffset.x,
-            728,840
+        else if (phase === 2) {
+          switchX = clamp(
+            p.x + grabOffset.x,
+            700, 810
           );
         }
 
-        else if(phase===3){
-          const wire=wires[wireIndex];
-
-          wire.pos={
-            x:p.x+grabOffset.x,
-            y:p.y+grabOffset.y
-          };
+        else if (phase === 3) {
+          const wire = wires[wireHeldIndex];
+          if (wire) {
+            wire.pos = {
+              x: p.x + grabOffset.x,
+              y: p.y + grabOffset.y
+            };
+          }
         }
 
-        else if(phase===4){
-          antenna={
-            x:p.x+grabOffset.x,
-            y:p.y+grabOffset.y
+        else if (phase === 4) {
+          antennaTip = {
+            x: clamp(p.x + grabOffset.x, 700, 900),
+            y: clamp(p.y + grabOffset.y, 120, 340)
           };
         }
       }
@@ -943,69 +984,87 @@ function tick(now){
   requestAnimationFrame(tick);
 }
 
-function restart(){
-  angles=[-1.08,.48,.53];
+function restart() {
+  angles = [-1.08, 0.48, 0.53];
 
-  drag=-1;
-  lastPointer=null;
-  held=false;
-  done=false;
-  phase=0;
+  drag = -1;
+  lastPointer = null;
+  held = false;
+  done = false;
+  phase = 0;
+  wireHeldIndex = -1;
 
-  rock={x:743,y:390};
-  battery={x:637,y:325};
-  cover={x:721,y:314};
-  switchX=728;
+  rock = { x: 770, y: 390 };
+  battery = { x: 610, y: 315 };
+  cover = { x: 736, y: 308 };
+  switchX = 700;
 
-  wireIndex=0;
-
-  wires=[
+  wires = [
     {
-      color:"#eb6564",
-      pos:{x:678,y:280},
-      home:{x:678,y:280},
-      connected:false
+      color: "#64d38f", // 초록
+      pos: { x: 686, y: 262 },
+      home: { x: 686, y: 262 },
+      socket: { x: 835, y: 350 },
+      connected: false
     },
     {
-      color:"#61b8f0",
-      pos:{x:678,y:344},
-      home:{x:678,y:344},
-      connected:false
+      color: "#e8605b", // 빨강
+      pos: { x: 664, y: 336 },
+      home: { x: 664, y: 336 },
+      socket: { x: 835, y: 250 },
+      connected: false
+    },
+    {
+      color: "#f0c64f", // 노랑
+      pos: { x: 702, y: 303 },
+      home: { x: 702, y: 303 },
+      socket: { x: 835, y: 317 },
+      connected: false
+    },
+    {
+      color: "#5dafff", // 파랑
+      pos: { x: 680, y: 376 },
+      home: { x: 680, y: 376 },
+      socket: { x: 835, y: 283 },
+      connected: false
     }
   ];
 
-  antenna={x:750,y:278};
+  antennaTip = { x: 760, y: 302 };
 
-  progress=0;
-  grabOffset={x:0,y:0};
+  progress = 0;
+  grabOffset = { x: 0, y: 0 };
 
-  timeLimit=cfg.duration;
+  timeLimit = missionSeconds();
 
-  started=performance.now();
-  last=started;
+  started = performance.now();
+  last = started;
 
-  document.getElementById("overlay")
-    .classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
 
-  tell(
-    "집게 끝을 목표에 정확히 맞춘 후 조작하세요."
-  );
+  if (cfg.mission === "rock") {
+    tell("암석 샘플을 집어 왼쪽의 SAMPLE RECEIVER로 옮기세요.");
+  } else if (cfg.mission === "battery") {
+    tell("잠금장치를 해제한 뒤 배터리를 오른쪽으로 추출하세요.");
+  } else {
+    tell("위성 외부 수리 절차를 순서대로 완료하세요.");
+  }
 
   draw();
 }
 
-document.getElementById("action").onclick=action;
-document.getElementById("restart").onclick=restart;
-document.getElementById("retry").onclick=restart;
+document.getElementById("action").onclick = action;
+document.getElementById("restart").onclick = restart;
+document.getElementById("retry").onclick = restart;
 
-document.addEventListener("keydown",e=>{
-  if(e.code==="Space"){
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") {
     e.preventDefault();
     action();
   }
 });
 
-window.addEventListener("resize",()=>{
+window.addEventListener("resize", () => {
   fit();
   draw();
 });
