@@ -5,838 +5,571 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: #101924;
-  color: #eef3f5;
-  font: 14px system-ui, "Malgun Gothic", sans-serif;
-}
-
-#app {
-  position: relative;
-  border: 1px solid #354858;
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-header {
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 22px;
-  background: #172838;
-  border-bottom: 1px solid #3d5261;
-}
-
-.eyebrow {
-  font: 700 11px monospace;
-  letter-spacing: 2px;
-  color: #8eb9bb;
-}
-
-h2 {
-  font-size: 20px;
-  margin: 5px 0 0;
-}
-
-#clock {
-  font: 800 30px monospace;
-  color: #f3d38c;
-}
-
-#clock.red {
-  color: #ff6d6d;
-  animation: pulse 1s infinite alternate;
-}
-
-@keyframes pulse {
-  to { opacity: .45; }
-}
-
-#canvas {
-  display: block;
-  width: 100%;
-  height: 480px;
-  touch-action: none;
-  cursor: crosshair;
-  background: #132332;
-}
-
-footer {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 13px 16px;
-  background: #172838;
-}
-
-button {
-  cursor: pointer;
-  color: #eff5f6;
-  background: #293e50;
-  border: 1px solid #5a7486;
-  border-radius: 9px;
-  padding: 11px 16px;
-  font-weight: 700;
-}
-
-button.primary {
-  background: #cf855c;
-  border-color: #e5ac86;
-  color: #1d2530;
-}
-
-#hint {
-  flex: 1;
-  min-width: 250px;
-  font-size: 13px;
-  color: #c6d6d9;
-}
-
-#overlay {
-  position: absolute;
-  inset: 0;
-  background: #09121cdb;
-  display: none;
-  z-index: 10;
-  align-items: center;
-  justify-content: center;
-}
-
-#overlay.show {
-  display: flex;
-}
-
-.panel {
-  min-width: 310px;
-  max-width: 90%;
-  text-align: center;
-  background: #203545;
-  border: 1px solid #7c9eac;
-  border-radius: 20px;
-  padding: 28px;
-}
-
-.panel h1 {
-  font-size: 44px;
-  margin: 4px 0;
-}
-
-.panel p {
-  color: #c4d4d9;
-}
+*{box-sizing:border-box}
+body{margin:0;background:#101924;color:#edf4f5;font:14px system-ui,'Malgun Gothic',sans-serif}
+#app{position:relative;border:1px solid #385164;border-radius:15px;overflow:hidden}
+header,footer{background:#172b3d;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header{border-bottom:1px solid #4b6574}
+footer{justify-content:flex-start;flex-wrap:wrap}
+small{display:block;color:#99c5d5;letter-spacing:2px;font:700 11px monospace}
+h2{margin:4px 0 0;font-size:20px}
+#clock{font:bold 30px monospace;color:#ffd087}
+#clock.red{color:#ff6464}
+canvas{display:block;width:100%;height:480px;background:#152b3e;touch-action:none;cursor:crosshair}
+button{background:#344d60;color:white;border:1px solid #708c9c;border-radius:9px;padding:11px 14px;font-weight:bold;cursor:pointer}
+button.primary{background:#d88a60;color:#182431;border-color:#ffc099}
+#hint{flex:1;min-width:250px;color:#d3dfe2;font-size:13px}
+#overlay{display:none;position:absolute;inset:0;background:#07121cde;z-index:30;align-items:center;justify-content:center}
+#overlay.show{display:flex}
+.dialog{text-align:center;background:#22394b;border:1px solid #9bb9c5;border-radius:18px;padding:32px;min-width:290px}
+.dialog h1{font-size:45px;margin:9px 0}
 </style>
 </head>
-
 <body>
 <div id="app">
-
-  <header>
-    <div>
-      <div class="eyebrow">
-        MECHA LAB / MISSION CONTROL
-      </div>
-      <h2 id="name">MISSION</h2>
-    </div>
-
-    <div style="text-align:right">
-      <div class="eyebrow">TIME REMAINING</div>
-      <div id="clock">03:00</div>
-    </div>
-  </header>
-
-  <canvas id="canvas"></canvas>
-
-  <footer>
-    <button class="primary" id="grip">
-      집게 닫기 / 열기 (Space)
-    </button>
-
-    <button id="reset">다시 시작</button>
-
-    <div id="hint">
-      빨간 관절을 잡고 마우스로 회전하세요.
-    </div>
-  </footer>
-
-  <div id="overlay">
-    <div class="panel">
-      <div class="eyebrow">MISSION REPORT</div>
-      <h1 id="outcome"></h1>
-      <p id="description"></p>
-      <button class="primary" id="retry">
-        다시 도전
-      </button>
-
-      <p style="font-size:12px">
-        처음으로 돌아가기는 게임 아래의
-        Streamlit 버튼을 이용하세요.
-      </p>
-    </div>
+<header>
+  <div>
+    <small>MECHA LAB / MISSION CONTROL</small>
+    <h2 id="title">MISSION</h2>
   </div>
+  <div style="text-align:right">
+    <small>TIME REMAINING</small>
+    <div id="clock">03:00</div>
+  </div>
+</header>
 
+<canvas id="game"></canvas>
+
+<footer>
+  <button class="primary" id="action">집게 닫기 / 열기 (Space)</button>
+  <button id="restart">다시 시작</button>
+  <div id="hint">빨간 관절을 마우스로 회전하세요.</div>
+</footer>
+
+<div id="overlay">
+  <div class="dialog">
+    <small>MISSION REPORT</small>
+    <h1 id="outcome">SUCCESS</h1>
+    <p id="detail"></p>
+    <button class="primary" id="retry">다시 도전</button>
+    <p style="font-size:12px;color:#b6cbd4">
+      처음으로 돌아가기는 게임 아래 Streamlit 버튼을 이용하세요.
+    </p>
+  </div>
+</div>
 </div>
 
 <script>
-const cfg = __GAME_CONFIG__;
+const cfg=__GAME_CONFIG__;
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const hint = document.getElementById("hint");
-const clock = document.getElementById("clock");
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const clock=document.getElementById('clock');
+const hint=document.getElementById('hint');
 
-document.getElementById("name").textContent = cfg.title;
+document.getElementById('title').textContent=cfg.title;
 
-const W = 1000;
-const H = 480;
+const W=1000,H=480;
+const base={x:115,y:421};
+const lengths=[222,241,194];
+const sensitivity=[.53,.78,1.08];
 
-const base = {x:115, y:421};
-const lengths = [222, 241, 194];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
-const sensitivity = [.53, .78, 1.08];
+let angles,points,drag,lastPointer,held,done,phase;
+let rock,battery,cover,switchX,progress,grabOffset,started,last;
 
-let angles;
-let points;
-let drag = -1;
-let held = false;
-let done = false;
-let phase = 0;
-
-let rock;
-let battery;
-let shield;
-let switchX;
-let charge;
-let started;
-let last;
-
-const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
-
-const dist = (a,b) =>
-  Math.hypot(a.x-b.x,a.y-b.y);
-
-function fit() {
-  const r = window.devicePixelRatio || 1;
-
-  canvas.width = Math.round(canvas.clientWidth*r);
-  canvas.height = Math.round(480*r);
-
-  ctx.setTransform(
-    canvas.width/W,0,
-    0,canvas.height/H,
-    0,0
-  );
+function fit(){
+  const r=devicePixelRatio||1;
+  canvas.width=Math.round(canvas.clientWidth*r);
+  canvas.height=Math.round(480*r);
+  ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
 }
 
-function rect(x,y,w,h,color,r=0) {
-  ctx.fillStyle = color;
+function box(x,y,w,h,color,r=0){
+  ctx.fillStyle=color;
   ctx.beginPath();
   ctx.roundRect(x,y,w,h,r);
   ctx.fill();
 }
 
-function line(x,y,X,Y,color,width) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.lineCap = "round";
-
+function line(x,y,X,Y,color,width){
+  ctx.strokeStyle=color;
+  ctx.lineWidth=width;
+  ctx.lineCap='round';
   ctx.beginPath();
   ctx.moveTo(x,y);
   ctx.lineTo(X,Y);
   ctx.stroke();
 }
 
-function circle(x,y,r,fill,stroke="",sw=1) {
+function circle(x,y,r,color,border='',width=1){
   ctx.beginPath();
   ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fillStyle = fill;
+  ctx.fillStyle=color;
   ctx.fill();
-
-  if(stroke) {
-    ctx.lineWidth = sw;
-    ctx.strokeStyle = stroke;
+  if(border){
+    ctx.strokeStyle=border;
+    ctx.lineWidth=width;
     ctx.stroke();
   }
 }
 
-function text(s,x,y,size=15,color="#e5edf0",bold=false) {
-  ctx.font = `${bold?"700":"500"} ${size}px system-ui`;
-  ctx.fillStyle = color;
+function label(s,x,y,size=14,color='#e4eef1'){
+  ctx.font=`bold ${size}px system-ui`;
+  ctx.fillStyle=color;
   ctx.fillText(s,x,y);
 }
 
-// 로봇팔 순기구학
-function arm() {
-  points = [{...base}];
-
-  let sum = 0;
-
-  for(let i=0;i<3;i++) {
-    sum += angles[i];
-
-    const p = points[i];
-
+// 관절 각도로 손목 위치를 계산
+function arm(){
+  points=[{...base}];
+  let a=0;
+  for(let i=0;i<3;i++){
+    a+=angles[i];
+    const p=points[i];
     points.push({
-      x:p.x+Math.cos(sum)*lengths[i],
-      y:p.y+Math.sin(sum)*lengths[i]
+      x:p.x+Math.cos(a)*lengths[i],
+      y:p.y+Math.sin(a)*lengths[i]
     });
   }
-
   return points[3];
 }
 
-// 미션별 현재 작업 대상
-function objective() {
-  if(cfg.mission==="rock") {
-    return rock;
-  }
-
-  if(cfg.mission==="battery") {
-    return phase===0
-      ? {x:582,y:296}
-      : battery;
-  }
-
-  if(phase===0) return shield;
-  if(phase===1) return {x:827,y:301};
-
-  return {x:switchX,y:245};
+// 중요: 손목이 아니라 실제 집게 끝 접촉점
+function gripPoint(){
+  const wrist=arm();
+  const a=angles.reduce((s,v)=>s+v,0);
+  return {
+    x:wrist.x+61*Math.cos(a),
+    y:wrist.y+61*Math.sin(a)
+  };
 }
 
-function drawBackground() {
-  const mars = cfg.mission==="rock";
+// 현재 단계에서 상호작용할 물체
+function target(){
+  if(cfg.mission==='rock')return rock;
 
-  rect(
-    0,0,W,H,
-    mars?"#e5b790":"#142b40"
-  );
+  if(cfg.mission==='battery'){
+    return phase===0?{x:582,y:296}:battery;
+  }
 
-  if(mars) {
-    rect(0,330,W,150,"#cf926c");
+  if(phase===0)return cover;
+  if(phase===1)return{x:698,y:294};
+  return{x:switchX,y:239};
+}
 
-    ctx.fillStyle = "#ba7756";
+// 작업별 접촉 허용 거리
+function limit(){
+  if(cfg.mission==='rock')return 62;
+  if(cfg.mission==='battery')return phase===0?67:72;
+  return 68;
+}
+
+function canInteract(){
+  return !done&&!held&&
+    distance(gripPoint(),target())<=limit();
+}
+
+function background(){
+  if(cfg.mission==='rock'){
+    box(0,0,W,H,'#e7bb93');
+    box(0,335,W,145,'#cc946e');
+
+    ctx.fillStyle='#b77c5e';
     ctx.beginPath();
-
-    ctx.moveTo(0,349);
-    ctx.bezierCurveTo(180,285,240,355,410,325);
-    ctx.bezierCurveTo(530,306,680,347,1000,288);
+    ctx.moveTo(0,360);
+    ctx.bezierCurveTo(220,290,400,365,600,321);
+    ctx.bezierCurveTo(780,300,900,339,1000,311);
     ctx.lineTo(1000,480);
     ctx.lineTo(0,480);
     ctx.fill();
 
-    rect(0,424,W,56,"#ad7558");
+    box(0,428,W,52,'#a87358');
 
-    for(let i=0;i<16;i++) {
-      circle(
-        20+i*63,
-        436+(i%3)*9,
-        3+(i%4),
-        "#8c5d49"
-      );
+    for(let i=0;i<17;i++){
+      circle(33+i*57,442+(i%3)*9,3+(i%4),'#865744');
     }
 
-    text(
-      "MARS • SAMPLING SITE",
-      25,33,14,"#563f36",true
-    );
-  } else {
-    for(let j=0;j<8;j++) {
-      rect(j*146,0,2,480,"#264359");
-      rect(0,j*90,W,2,"#264359");
+    label('MARS / SAMPLE SITE',22,32,14,'#624034');
+  }else{
+    box(0,0,W,H,'#142d41');
+
+    for(let x=0;x<W;x+=146){
+      line(x,0,x,H,'#28485d',2);
     }
 
-    for(let j=0;j<7;j++) {
-      circle(40+j*143,29,3,"#749aaf");
+    for(let y=0;y<H;y+=90){
+      line(0,y,W,y,'#28485d',2);
     }
 
-    rect(0,444,W,36,"#243f52");
+    box(0,444,W,36,'#254457');
 
-    text(
-      cfg.mission==="battery"
-        ? "ORBITAL SERVICE BAY"
-        : "SATELLITE REPAIR UNIT",
-      25,33,14,"#a5d3e1",true
+    label(
+      cfg.mission==='battery'
+        ?'ORBITAL SERVICE BAY'
+        :'SATELLITE REPAIR UNIT',
+      22,32,14,'#a9d4df'
     );
   }
 }
 
-// 로봇팔 렌더링
-function drawArm() {
-  const tip = arm();
-
-  rect(56,419,122,53,"#263c4c",8);
-  rect(77,434,84,10,"#70929c",3);
-
-  for(let i=0;i<3;i++) {
-    const a = points[i];
-    const b = points[i+1];
-
-    line(
-      a.x+5,a.y+5,
-      b.x+5,b.y+5,
-      "#26323e",35
-    );
-
-    line(
-      a.x,a.y,
-      b.x,b.y,
-      "#3e5967",31
-    );
-
-    line(
-      a.x,a.y,
-      b.x,b.y,
-      "#a4bcc1",20
-    );
-
-    line(
-      a.x+4,a.y-4,
-      b.x+4,b.y-4,
-      "#e3ded2",5
-    );
-
-    const f = .32;
-
-    circle(
-      a.x+(b.x-a.x)*f,
-      a.y+(b.y-a.y)*f,
-      6,"#e9ad70","#425966",2
-    );
-  }
-
-  // 관절 모델링
-  for(let i=0;i<3;i++) {
-    const p = points[i];
-
-    circle(
-      p.x,p.y,20,
-      "#344d5c",
-      "#d6e0df",4
-    );
-
-    circle(
-      p.x,p.y,13,
-      drag===i?"#ffca67":"#d76760",
-      "#293c48",3
-    );
-
-    circle(p.x,p.y,3,"#fff0d1");
-
-    text(
-      "J"+(i+1),
-      p.x-11,p.y-28,
-      13,"#b2c6cd",true
-    );
-  }
-
-  // 집게
-  const a = angles.reduce((x,y)=>x+y,0);
-
-  ctx.save();
-
-  ctx.translate(tip.x,tip.y);
-  ctx.rotate(a);
-
-  rect(-4,-15,36,30,"#425968",6);
-  rect(19,-9,26,18,"#b7cbcb",4);
-  rect(35,-17,9,34,"#384d59",3);
-
-  const gap = held?6:19;
-
-  line(43,-gap,58,-gap,"#d8e3df",10);
-  line(43,gap,58,gap,"#d8e3df",10);
-
-  line(58,-gap,70,-gap+8,"#d98c65",7);
-  line(58,gap,70,gap-8,"#d98c65",7);
-
-  ctx.restore();
-
-  return tip;
+function gauge(v,name){
+  box(758,57,220,64,'#20394b',10);
+  label(name,770,78,12,'#c3dce3');
+  box(770,91,194,13,'#435766',6);
+  box(770,91,194*clamp(v,0,1),13,'#87d7a5',6);
 }
 
-// 진행 게이지
-function drawGauge(value,label) {
-  rect(722,70,246,61,"#1d3446",10);
+function objects(){
+  const near=canInteract();
+  const glow=near?'#8af3b4':'#e0c59b';
 
-  text(
-    label,735,91,
-    12,"#b1d0d5",true
-  );
-
-  rect(735,102,217,13,"#394f5b",7);
-
-  rect(
-    735,102,
-    217*clamp(value,0,1),
-    13,"#89d8a5",7
-  );
-}
-
-// 미션별 장치 그리기
-function drawObjects() {
-
-  // 미션 1: 화성 암석
-  if(cfg.mission==="rock") {
-    rect(568,287,128,92,"#9ebda3",10);
-    rect(580,299,104,68,"#4d756c",8);
-
-    text(
-      "SAMPLE BIN",
-      576,279,13,"#4e3d36",true
-    );
+  if(cfg.mission==='rock'){
+    box(555,290,147,92,'#91b3a5',10);
+    box(566,301,125,69,'#41675d',8);
+    label('SAMPLE BIN',567,280,13,'#624034');
 
     circle(
-      rock.x,rock.y,26,
-      "#9a6549","#e3aa76",4
+      rock.x,rock.y,26,'#9b634a',
+      held||near?glow:'#edc39c',
+      held||near?6:3
     );
 
-    circle(
-      rock.x-7,rock.y-6,8,
-      "#ad7454"
-    );
-
-    circle(
-      rock.x+9,rock.y+7,5,
-      "#674938"
-    );
-
-    text(
-      "ROCK 01",
-      742,358,13,"#4d3b37",true
-    );
-
-    return;
+    circle(rock.x-8,rock.y-7,7,'#ba8464');
+    label('ROCK',rock.x-20,rock.y-37,12,'#634338');
   }
 
-  // 미션 2: 배터리 분리
-  if(cfg.mission==="battery") {
+  else if(cfg.mission==='battery'){
+    box(536,247,251,149,'#667f8c',14);
+    box(552,268,218,109,'#253c4e',10);
+    box(570,293,184,67,'#3d5a68',7);
+    box(570,365,185,5,'#adc5c9',3);
 
-    // 장치를 중앙에 가깝게 이동
-    rect(557,255,226,137,"#566f7c",13);
-    rect(575,277,196,92,"#273c4d",9);
-    rect(590,299,155,60,"#425d6a",7);
-
-    // 레일 표시
-    rect(596,362,154,5,"#8da7ad",2);
-
-    // 배터리 본체
-    rect(
-      battery.x-32,
-      battery.y-26,
-      67,52,
-      "#f1bf67",7
+    box(
+      battery.x-32,battery.y-26,
+      66,52,'#f3c36a',7
     );
 
-    rect(
-      battery.x-27,
-      battery.y-22,
-      57,12,
-      "#e6dcaf",2
+    box(
+      battery.x-26,battery.y-20,
+      54,12,'#f9e3ad',3
     );
 
-    text(
-      "Li-ion",
-      battery.x-27,
-      battery.y+13,
-      14,"#314150",true
-    );
+    label('Li-ion',battery.x-25,battery.y+13,14,'#324452');
 
-    // 잠금장치
-    rect(
-      568,279,28,34,
+    box(
+      567,279,30,35,
       phase===0
-        ? "#de6960"
-        : "#76b8a2",
+        ?(near?'#82e3af':'#e56b62')
+        :'#7ac6a5',
       5
     );
 
-    text(
-      phase===0?"LOCK":"OPEN",
-      551,246,12,"#b8e0e2",true
-    );
+    label(phase===0?'LOCK':'OPEN',550,239,13,'#c6e3e8');
 
-    // 배터리 분리 게이지
-    drawGauge(
-      phase===0?0:charge,
-      "배터리 분리 진행률"
-    );
-
-    if(phase===0) {
-      text(
-        "① 빨간 잠금장치를 해제하세요.",
-        495,423,13
+    if(phase===0){
+      label(
+        '① 잠금장치에 집게를 대고 작동',
+        516,427,13,'#e3f1f4'
       );
-    } else {
-      text(
-        "② 배터리를 잡고 오른쪽으로 당기세요.",
-        468,423,13
+    }else{
+      label(
+        '② 배터리를 집고 오른쪽으로 당기기',
+        515,427,13,'#e3f1f4'
       );
     }
 
-    return;
-  }
-
-  // 미션 3: 위성 수리
-  rect(730,175,239,255,"#637d8e",18);
-  rect(747,191,205,222,"#2b4558",10);
-
-  for(let i=0;i<4;i++) {
-    rect(
-      760+i*44,
-      385,30,13,
-      "#597688",3
+    gauge(
+      phase===0?0:progress,
+      '배터리 분리 진행률'
     );
   }
 
-  if(phase===0) {
-    rect(
-      shield.x-34,
-      shield.y-30,
-      68,60,
-      "#cf9c68",8
-    );
+  else{
+    box(656,164,282,249,'#648293',17);
+    box(671,181,251,215,'#2b485b',11);
 
-    rect(
-      shield.x-23,
-      shield.y-17,
-      46,34,
-      "#e6bc84",5
-    );
+    if(phase===0){
+      box(
+        cover.x-38,cover.y-30,
+        76,60,
+        near?'#90e4b5':'#d4ad7a',8
+      );
 
-    text(
-      "PANEL COVER",
-      742,150,15,"#bcdce4",true
-    );
+      box(
+        cover.x-25,cover.y-18,
+        50,36,'#eac591',4
+      );
 
-    drawGauge(0,"1 / 3 · 덮개 제거");
+      label('COVER → 왼쪽으로 이동',662,151,14);
+      gauge(0,'정비 단계 1/3');
+    }else{
+      circle(
+        698,294,19,
+        phase===1
+          ?(near?'#8cf0b1':'#d96862')
+          :'#79c4a0',
+        '#dce4e6',4
+      );
 
-  } else {
-    circle(
-      827,301,20,
-      phase===1
-        ? "#d76963"
-        : "#79c8a6",
-      "#d8e3e2",4
-    );
+      label('PUSH',675,330,13);
+      box(704,258,173,8,'#94adb9',4);
 
-    text("PUSH",803,340,12);
+      box(
+        switchX-15,224,30,31,
+        phase===2&&near?'#8cf0b1':'#e4c37c',5
+      );
 
-    rect(
-      switchX-15,229,
-      30,33,
-      "#d3b778",5
-    );
+      label('SLIDE',710,211,13);
 
-    rect(781,258,151,7,"#95adad",3);
-
-    text(
-      "SLIDE",
-      784,212,12,"#badbe6",true
-    );
-
-    drawGauge(
-      phase===1
-        ? .33
-        : .68+(switchX-821)/410,
-      "정비 완료율"
-    );
+      gauge(
+        phase===1?.45:.7+(switchX-728)/480,
+        '정비 진행률'
+      );
+    }
   }
 }
 
-function draw() {
-  ctx.clearRect(0,0,W,H);
+function drawArm(){
+  const wrist=arm();
 
-  drawBackground();
-  drawObjects();
-  drawArm();
+  box(54,422,128,54,'#293f50',8);
+  box(75,438,88,10,'#7296a1',4);
 
-  text(
-    "클릭한 관절을 원형으로 드래그",
-    18,70,13,
-    cfg.mission==="rock"
-      ? "#654f46"
-      : "#b1d0d9"
+  for(let i=0;i<3;i++){
+    const a=points[i],b=points[i+1];
+
+    line(a.x+5,a.y+5,b.x+5,b.y+5,'#263846',35);
+    line(a.x,a.y,b.x,b.y,'#405e6e',30);
+    line(a.x,a.y,b.x,b.y,'#abc4c9',19);
+    line(a.x+4,a.y-4,b.x+4,b.y-4,'#ece5d8',4);
+
+    circle(
+      a.x+(b.x-a.x)*.32,
+      a.y+(b.y-a.y)*.32,
+      6,'#e9a875','#405564',2
+    );
+  }
+
+  for(let i=0;i<3;i++){
+    const p=points[i];
+
+    circle(p.x,p.y,20,'#324b5b','#dce9ec',4);
+
+    circle(
+      p.x,p.y,13,
+      drag===i?'#ffcb69':'#da6d62',
+      '#2c4150',3
+    );
+
+    circle(p.x,p.y,3,'#fff7df');
+    label('J'+(i+1),p.x-11,p.y-26,12,'#b3ced8');
+  }
+
+  const a=angles.reduce((s,v)=>s+v,0);
+
+  ctx.save();
+  ctx.translate(wrist.x,wrist.y);
+  ctx.rotate(a);
+
+  box(-4,-15,37,30,'#425e6d',6);
+  box(21,-10,23,20,'#c1d5d5',4);
+
+  const g=held?7:20;
+
+  line(43,-g,56,-g,'#d9e7e6',9);
+  line(43,g,56,g,'#d9e7e6',9);
+
+  line(56,-g,70,-g+9,'#e49b72',7);
+  line(56,g,70,g-9,'#e49b72',7);
+
+  ctx.restore();
+
+  // 실제 판정 지점을 화면에 표시
+  const p=gripPoint();
+
+  circle(
+    p.x,p.y,held?5:7,
+    canInteract()?'#69f5ad':'#f7d18b',
+    '#183443',2
   );
 }
 
-function message(s) {
-  hint.textContent = s;
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  background();
+  objects();
+  drawArm();
+
+  const color=cfg.mission==='rock'
+    ?'#624338':'#c4e0e6';
+
+  label(
+    '빨간 관절 선택 → 원형으로 드래그',
+    20,66,13,color
+  );
+
+  if(canInteract()){
+    label(
+      '● 작동 가능! [집게 닫기 / 열기]를 누르세요',
+      20,92,14,
+      cfg.mission==='rock'?'#386f52':'#8ff2b3'
+    );
+  }
 }
 
-function finish(success) {
-  if(done) return;
-
-  done = true;
-
-  const el = document.getElementById("outcome");
-
-  el.textContent = success?"SUCCESS":"FAILED";
-
-  el.style.color = success
-    ? "#9ce6b0"
-    : "#f78680";
-
-  document.getElementById("description").textContent =
-    success
-      ? "모든 작업 조건을 충족했습니다."
-      : "제한시간이 종료되었습니다.";
-
-  document.getElementById("overlay")
-    .classList.add("show");
+function tell(s){
+  hint.textContent=s;
 }
 
-// 집게 사용 및 미션 상호작용
-function useGripper() {
-  if(done) return;
+function finish(ok){
+  if(done)return;
 
-  const tip = arm();
-  const obj = objective();
+  done=true;
 
-  // 배터리 잠금 해제
-  if(cfg.mission==="battery" && phase===0) {
-    if(dist(tip,obj)<52) {
-      phase=1;
+  const o=document.getElementById('outcome');
 
-      message(
-        "잠금 해제! 노란 배터리를 집고 오른쪽으로 당기세요."
-      );
-    } else {
-      message(
-        "빨간 잠금장치에 집게를 더 가까이 가져가세요."
-      );
-    }
+  o.textContent=ok?'SUCCESS':'FAILED';
+  o.style.color=ok?'#a1efbb':'#fc8179';
+
+  document.getElementById('detail').textContent=
+    ok
+      ?'작업 완료! 미션에 성공했습니다.'
+      :'제한시간이 종료되었습니다.';
+
+  document.getElementById('overlay')
+    .classList.add('show');
+}
+
+function action(){
+  if(done)return;
+
+  const p=gripPoint();
+  const t=target();
+
+  if(!held&&distance(p,t)>limit()){
+    tell(
+      '집게 끝의 작은 점을 목표에 더 가까이 이동하세요. 초록색이 되면 작동합니다.'
+    );
     return;
   }
 
-  // 위성 버튼 조작
-  if(cfg.mission==="satellite" && phase===1) {
-    if(dist(tip,obj)<52) {
-      phase=2;
-
-      message(
-        "버튼 작동 완료! 스위치를 오른쪽으로 이동하세요."
-      );
-    } else {
-      message(
-        "빨간 버튼에 집게를 가까이 가져가세요."
-      );
-    }
+  // 배터리 잠금장치 해제
+  if(cfg.mission==='battery'&&phase===0){
+    phase=1;
+    tell(
+      '잠금 해제 성공! 노란 배터리를 집고 오른쪽으로 당기세요.'
+    );
     return;
   }
 
-  // 물체 잡기
-  if(!held) {
-    if(dist(tip,obj)<59) {
-      held=true;
-
-      message(
-        "잡았습니다! 관절을 움직여 목표 방향으로 이동하세요."
-      );
-    } else {
-      message(
-        "집게 끝을 목표 물체에 더 가까이 이동하세요."
-      );
-    }
+  // 위성 버튼 누르기
+  if(cfg.mission==='satellite'&&phase===1){
+    phase=2;
+    tell(
+      '버튼 작동 완료! 위쪽 스위치를 잡고 오른쪽으로 옮기세요.'
+    );
     return;
   }
 
-  // 물체 놓기
+  if(!held){
+    held=true;
+
+    // 집게와 물체의 상대 위치를 기억
+    grabOffset={
+      x:t.x-p.x,
+      y:t.y-p.y
+    };
+
+    tell('잡기 성공! 관절을 움직여 물체를 이동하세요.');
+    return;
+  }
+
   held=false;
 
-  if(cfg.mission==="rock") {
+  if(cfg.mission==='rock'){
     if(
-      rock.x>577 &&
-      rock.x<689 &&
-      rock.y>295 &&
-      rock.y<372
-    ) {
+      rock.x>566&&rock.x<691&&
+      rock.y>299&&rock.y<372
+    ){
       finish(true);
-    } else {
-      message(
-        "암석을 SAMPLE BIN 안에 놓으세요."
+    }else{
+      tell(
+        '암석을 초록색 SAMPLE BIN 안으로 이동한 뒤 놓으세요.'
       );
     }
   }
 
-  else if(cfg.mission==="satellite" && phase===0) {
-    if(shield.x<676) {
+  else if(cfg.mission==='satellite'&&phase===0){
+    if(cover.x<625){
       phase=1;
-
-      message(
-        "덮개 제거 완료! 이제 빨간 버튼을 누르세요."
-      );
-    } else {
-      message(
-        "덮개를 왼쪽으로 더 이동시키세요."
-      );
+      tell('덮개 제거 완료! 빨간 버튼을 누르세요.');
+    }else{
+      tell('덮개를 더 왼쪽으로 옮기세요.');
     }
   }
 
-  else {
-    message("집게를 열었습니다.");
+  else{
+    tell('집게를 열었습니다.');
   }
 }
 
-function mouse(e) {
-  const r = canvas.getBoundingClientRect();
+function mouse(e){
+  const r=canvas.getBoundingClientRect();
 
-  return {
+  return{
     x:(e.clientX-r.left)*W/r.width,
     y:(e.clientY-r.top)*H/r.height
   };
 }
 
-let prevPointer=null;
-
 // 관절 선택
-canvas.addEventListener("pointerdown",e=>{
-  if(done) return;
+canvas.addEventListener('pointerdown',e=>{
+  if(done)return;
 
   const p=mouse(e);
   arm();
 
-  let md=40;
+  let best=43;
   drag=-1;
 
-  for(let i=0;i<3;i++) {
-    const d=dist(p,points[i]);
-
-    if(d<md) {
-      md=d;
+  for(let i=0;i<3;i++){
+    const d=distance(p,points[i]);
+    if(d<best){
+      best=d;
       drag=i;
     }
   }
 
-  if(drag!==-1) {
-    prevPointer=p;
+  if(drag>=0){
+    lastPointer=p;
     canvas.setPointerCapture(e.pointerId);
   }
 });
 
-// 관절 회전
-canvas.addEventListener("pointermove",e=>{
-  if(drag<0 || done) return;
+// 관절별 민감도에 맞춰 회전
+canvas.addEventListener('pointermove',e=>{
+  if(done||drag<0)return;
 
   const p=mouse(e);
   const pivot=points[drag];
 
-  const before=Math.atan2(
-    prevPointer.y-pivot.y,
-    prevPointer.x-pivot.x
+  const a=Math.atan2(
+    lastPointer.y-pivot.y,
+    lastPointer.x-pivot.x
   );
 
-  const after=Math.atan2(
+  const b=Math.atan2(
     p.y-pivot.y,
     p.x-pivot.x
   );
 
   const delta=Math.atan2(
-    Math.sin(after-before),
-    Math.cos(after-before)
+    Math.sin(b-a),
+    Math.cos(b-a)
   );
 
   angles[drag]=clamp(
@@ -844,99 +577,90 @@ canvas.addEventListener("pointermove",e=>{
     -2.85,2.85
   );
 
-  prevPointer=p;
+  lastPointer=p;
   draw();
 });
 
-for(const event of [
-  "pointerup",
-  "pointercancel",
-  "lostpointercapture"
-]) {
-  canvas.addEventListener(event,()=>{
+for(const ev of [
+  'pointerup',
+  'pointercancel',
+  'lostpointercapture'
+]){
+  canvas.addEventListener(ev,()=>{
     drag=-1;
-    prevPointer=null;
+    lastPointer=null;
   });
 }
 
-// 타이머 및 물체 이동
-function tick(t) {
-  const dt=Math.min((t-last)/1000,.05);
-  last=t;
+// 게임 시간 및 물체 이동
+function tick(now){
+  const dt=clamp((now-last)/1000,0,.05);
+  last=now;
 
-  if(!done) {
+  if(!done){
     const remain=Math.max(
       0,
-      Math.ceil(cfg.duration-(t-started)/1000)
+      Math.ceil(cfg.duration-(now-started)/1000)
     );
 
     clock.textContent=
-      String(Math.floor(remain/60)).padStart(2,"0")
-      +":"
-      +String(remain%60).padStart(2,"0");
+      String(Math.floor(remain/60)).padStart(2,'0')
+      +':'
+      +String(remain%60).padStart(2,'0');
 
-    clock.classList.toggle("red",remain<=60);
+    clock.classList.toggle('red',remain<=60);
 
-    if(remain===0) {
+    if(remain===0){
       finish(false);
     }
 
-    if(held && !done) {
-      const tip=arm();
+    if(held&&!done){
+      const p=gripPoint();
 
-      // 화성 암석 이동
-      if(cfg.mission==="rock") {
+      if(cfg.mission==='rock'){
         rock={
-          x:tip.x+66,
-          y:tip.y
+          x:p.x+grabOffset.x,
+          y:p.y+grabOffset.y
         };
       }
 
-      // 배터리 분리: 수정된 중앙 위치
-      else if(cfg.mission==="battery") {
+      else if(cfg.mission==='battery'){
         const desired=clamp(
-          tip.x+62,
-          637,
-          737
+          p.x+grabOffset.x,
+          637,737
         );
 
-        const dx=desired-battery.x;
-
         battery.x+=clamp(
-          dx,
-          -90*dt,
-          90*dt
+          desired-battery.x,
+          -105*dt,105*dt
         );
 
         battery.y=325;
 
-        charge=clamp(
+        progress=clamp(
           (battery.x-637)/100,
           0,1
         );
 
-        if(charge>=.99) {
+        if(progress>=.995){
           finish(true);
         }
       }
 
-      // 위성 덮개 이동
-      else if(phase===0) {
-        shield={
-          x:tip.x+64,
-          y:tip.y
+      else if(phase===0){
+        cover={
+          x:p.x+grabOffset.x,
+          y:p.y+grabOffset.y
         };
       }
 
-      // 위성 스위치 이동
-      else if(phase===2) {
+      else if(phase===2){
         switchX=clamp(
-          tip.x+52,
-          821,
-          932
+          p.x+grabOffset.x,
+          728,785
         );
 
-        if(switchX>=927) {
+        if(switchX>=780){
           finish(true);
         }
       }
@@ -947,49 +671,48 @@ function tick(t) {
   requestAnimationFrame(tick);
 }
 
-function restart() {
+function restart(){
   angles=[-1.08,.48,.53];
 
   drag=-1;
-  prevPointer=null;
+  lastPointer=null;
   held=false;
   done=false;
   phase=0;
 
-  rock={x:797,y:393};
-
-  // 중앙으로 옮긴 배터리 초기 위치
+  rock={x:743,y:390};
   battery={x:637,y:325};
+  cover={x:721,y:314};
+  switchX=728;
 
-  shield={x:824,y:310};
-  switchX=821;
-  charge=0;
+  progress=0;
+  grabOffset={x:0,y:0};
 
   started=performance.now();
   last=started;
 
-  document.getElementById("overlay")
-    .classList.remove("show");
+  document.getElementById('overlay')
+    .classList.remove('show');
 
-  message(
-    "빨간 관절을 드래그 → 집게를 목표로 이동 → [잡기/놓기]를 누르세요."
+  tell(
+    '집게 끝의 점을 대상에 가져가세요. 초록색이면 버튼으로 작동할 수 있습니다.'
   );
 
   draw();
 }
 
-document.getElementById("grip").onclick=useGripper;
-document.getElementById("reset").onclick=restart;
-document.getElementById("retry").onclick=restart;
+document.getElementById('action').onclick=action;
+document.getElementById('restart').onclick=restart;
+document.getElementById('retry').onclick=restart;
 
-document.addEventListener("keydown",e=>{
-  if(e.code==="Space") {
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){
     e.preventDefault();
-    useGripper();
+    action();
   }
 });
 
-window.addEventListener("resize",()=>{
+window.addEventListener('resize',()=>{
   fit();
   draw();
 });
@@ -998,6 +721,6 @@ fit();
 restart();
 requestAnimationFrame(tick);
 </script>
-
 </body>
 </html>
+
