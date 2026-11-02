@@ -8,94 +8,49 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-MISSIONS = [
-    {
-        "n": "01",
-        "icon": "🪨",
-        "name": "화성 암석 집기",
-        "sub": "MARS SAMPLE COLLECTION",
-        "desc": "암석을 집어 멀리 떨어진 샘플 보관함으로 운반",
-        "time": "01:30",
-        "path": "pages/1_화성_암석_집기.py"
-    },
-    {
-        "n": "02",
-        "icon": "🔋",
-        "name": "배터리 분리",
-        "sub": "BATTERY EXTRACTION",
-        "desc": "잠금장치를 해제하고 배터리를 오른쪽으로 추출",
-        "time": "02:00",
-        "path": "pages/2_배터리_분리.py"
-    },
-    {
-        "n": "03",
-        "icon": "🛰️",
-        "name": "위성 수리",
-        "sub": "SATELLITE REPAIR",
-        "desc": "버튼 두 개, 스위치, 4색 전선과 안테나 정비",
-        "time": "04:00",
-        "path": "pages/3_위성_수리.py"
-    }
-]
-
 if "mecha_screen" not in st.session_state:
     st.session_state.mecha_screen = "title"
 
-st.markdown("""
+st.markdown('''
 <style>
 [data-testid="stSidebar"],
 [data-testid="stSidebarNav"],
-[data-testid="stSidebarCollapsedControl"],
-#MainMenu,
-header[data-testid="stHeader"] {
+[data-testid="stSidebarCollapsedControl"] {
     display: none !important;
 }
 
-html, body,
-[data-testid="stAppViewContainer"],
 .stApp {
-    background: #100b29 !important;
-    color: #f4eaff;
+    background: #100b29;
+    color: #f4ecff;
 }
 
-[data-testid="stAppViewBlockContainer"],
-.block-container {
+.block-container,
+[data-testid="stAppViewBlockContainer"] {
     max-width: none !important;
     width: 100% !important;
-    padding: 20px clamp(22px,4vw,86px) 35px !important;
+    padding: 18px clamp(22px,4vw,84px) 40px !important;
 }
 
 [data-testid="stMain"] {
-    width: 100%;
     max-width: none !important;
 }
 
-[data-testid="stVerticalBlock"] {
-    gap: 0.7rem;
-}
-
-/* 전체 화면을 사용하는 표지 */
 .arcade {
     position: relative;
-    overflow: hidden;
-    width: 100%;
-    min-height: calc(100vh - 215px);
-    border: 5px solid #584091;
-    outline: 2px solid #8b68c5;
-    border-radius: 8px;
-    background:
-        radial-gradient(
-            ellipse at 50% 75%,
-            #302062 0%,
-            #1a1240 55%,
-            #100b29 100%
-        );
-    box-shadow: 8px 8px 0 #080719;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-align: center;
     isolation: isolate;
+    height: clamp(420px,66vh,720px);
+    overflow: hidden;
+    border: 5px solid #584091;
+    border-radius: 9px;
+    background: radial-gradient(
+        ellipse at 50% 72%,
+        #33216c 0%,
+        #19113b 55%,
+        #110c30 100%
+    );
+    box-shadow:
+        0 0 0 4px #20173e,
+        0 14px 40px #06040c;
 }
 
 .arcade:before {
@@ -103,356 +58,380 @@ html, body,
     position: absolute;
     inset: 0;
     background-image:
-        radial-gradient(
-            circle,
-            #f9eaf9 1.4px,
-            transparent 2px
-        ),
-        radial-gradient(
-            circle,
-            #76f3e1 1.2px,
-            transparent 2px
-        );
-    background-size: 110px 98px, 157px 133px;
-    background-position: 15px 5px, 70px 42px;
+        radial-gradient(#d9f7ff 1.8px,transparent 2px),
+        radial-gradient(#e89fff 1.7px,transparent 2px);
+    background-size: 91px 83px,137px 107px;
+    background-position: 17px 22px,45px 54px;
     opacity: .8;
-    animation: drift 17s linear infinite;
+    animation: stars 25s linear infinite;
     z-index: -1;
 }
 
-@keyframes drift {
+@keyframes stars {
     to {
-        background-position:
-            125px 103px,
-            227px 175px;
+        background-position: 108px 105px,182px 161px;
     }
 }
 
 .arcade-top {
-    padding: clamp(24px,4vh,44px) 12px 0;
-    color: #88f6d1;
-    font: 800 clamp(12px,1.2vw,16px) monospace;
+    text-align: center;
+    padding: clamp(18px,3.7vh,35px) 0;
+    color: #8fffd1;
     letter-spacing: 5px;
+    font: bold clamp(12px,1.3vw,17px) monospace;
 }
 
-.orbit {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    font-size: clamp(50px,7vw,112px);
-    margin: 0 8%;
-    animation: float 3.8s ease-in-out infinite;
+.space-art {
+    position: absolute;
+    inset: 15% 6% 22%;
+    pointer-events: none;
+}
+
+.ship,.sat,.world {
+    position: absolute;
+    animation: float 4s ease-in-out infinite;
+}
+
+.ship {
+    left: 11%;
+    top: 15%;
+    font-size: clamp(48px,6vw,100px);
+}
+
+.sat {
+    right: 23%;
+    top: 9%;
+    font-size: clamp(42px,5vw,74px);
+    animation-delay: -1.6s;
+}
+
+.world {
+    right: 7%;
+    top: 22%;
+    font-size: clamp(57px,7vw,112px);
+    animation-delay: -2.3s;
 }
 
 @keyframes float {
     50% {
-        transform: translateY(-12px);
+        transform: translateY(-17px) rotate(5deg);
     }
 }
 
-.hero-title {
-    font:
-        900 clamp(74px,10vw,176px)/1.05
-        monospace;
-    letter-spacing: clamp(2px,.8vw,12px);
-    color: #7fc6ff;
+.pixel-spark {
+    position: absolute;
+    color: #ffdc6d;
+    font: 900 34px monospace;
+    animation: twinkle 1.6s steps(2) infinite;
+}
+
+@keyframes twinkle {
+    50% { opacity: .3; }
+}
+
+.hero-copy {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 45%;
+    transform: translateY(-24%);
+    text-align: center;
+    padding: 0 10px;
+}
+
+.hero-name {
+    font: 900 clamp(54px,9vw,155px)/1 monospace;
+    letter-spacing: clamp(2px,.65vw,12px);
+    color: #85cfff;
     text-shadow:
-        5px 5px 0 #3e57b5,
-        10px 10px 0 #14153a;
+        5px 5px 0 #3c61c1,
+        9px 9px 0 #0d1041;
     white-space: nowrap;
 }
 
 .hero-sub {
-    font: 800 clamp(16px,2vw,31px) monospace;
+    margin-top: 24px;
+    color: #ffd1f7;
     letter-spacing: clamp(1px,.5vw,8px);
-    color: #ffb9ed;
-    text-shadow: 3px 3px #54358e;
-    margin: 22px 0 12px;
+    font: 800 clamp(13px,2vw,29px) monospace;
 }
 
 .hero-meta {
-    font: 700 clamp(12px,1.2vw,18px) monospace;
+    margin-top: 21px;
+    color: #91f2d8;
+    font: 700 clamp(11px,1.25vw,17px) monospace;
     letter-spacing: 3px;
-    color: #8beedc;
 }
 
-/* 픽셀 스타일 하단 지형 */
 .pixel-hills {
-    height: 66px;
-    margin-top: 18px;
-    background:
-        repeating-linear-gradient(
-            90deg,
-            #5799ec 0 24px,
-            #377dd4 24px 48px
-        );
+    height: clamp(46px,8vh,75px);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        #68bdff 0 24px,
+        #3f83d9 24px 45px
+    );
     clip-path: polygon(
-        0 20%,3% 8%,7% 27%,11% 9%,
-        15% 27%,19% 8%,23% 25%,
-        27% 9%,31% 22%,35% 8%,
-        39% 25%,43% 8%,47% 22%,
-        51% 8%,55% 26%,59% 8%,
-        63% 27%,67% 8%,71% 25%,
-        75% 8%,79% 26%,83% 8%,
-        87% 26%,91% 8%,95% 24%,
-        100% 8%,100% 100%,0 100%
+        0 23%,5% 5%,10% 35%,15% 8%,
+        20% 35%,25% 8%,30% 24%,35% 7%,
+        40% 30%,45% 6%,50% 22%,55% 6%,
+        60% 36%,65% 6%,70% 26%,75% 5%,
+        80% 33%,85% 8%,90% 28%,95% 7%,
+        100% 26%,100% 100%,0 100%
     );
 }
 
-/* 미션 선택 화면 */
-.menu-title {
+.button-caption {
     text-align: center;
-    color: #f5e7ff;
-    font: 900 clamp(30px,3.6vw,56px) monospace;
-    text-shadow: 3px 3px #6546a1;
-    margin: 0 0 18px;
-}
-
-.menu-sub {
-    text-align: center;
-    color: #a8e5dc;
-    font: 700 clamp(12px,1.3vw,17px) monospace;
+    color: #9b8ec8;
+    font: 700 11px monospace;
     letter-spacing: 3px;
-    margin-bottom: 25px;
-}
-
-.mission-card {
-    background: #211744;
-    border: 3px solid #7a5abb;
-    box-shadow: 6px 6px #0a0923;
-    padding: clamp(20px,2vw,34px);
-    min-height: clamp(330px,51vh,570px);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.card-number {
-    color: #89f4dc;
-    font: 800 clamp(13px,1.15vw,19px) monospace;
-    letter-spacing: 2px;
-}
-
-.card-icon {
-    font-size: clamp(68px,7vw,125px);
-    text-align: center;
-    margin: 20px 0;
-}
-
-.card-name {
-    color: #fff0ff;
-    font-size: clamp(24px,2.1vw,39px);
-    font-weight: 900;
-    line-height: 1.3;
-}
-
-.card-sub {
-    color: #8ee8ed;
-    font: 700 clamp(11px,1.05vw,17px) monospace;
-    letter-spacing: 1px;
     margin-top: 10px;
 }
 
-.card-desc {
-    color: #c9bfe6;
-    font-size: clamp(14px,1.1vw,19px);
-    line-height: 1.7;
-    margin: 24px 0;
-}
-
-.card-time {
-    color: #ffda83;
-    font: 900 clamp(24px,2.3vw,39px) monospace;
-}
-
-/* 픽셀 스타일 버튼 */
 .stButton > button {
-    width: 100%;
-    border-radius: 0 !important;
-    min-height: clamp(55px,7vh,74px) !important;
-    background: #5437a1 !important;
-    border: 3px solid #9cc8ff !important;
-    color: #fff !important;
-    box-shadow: 5px 5px #0a0924 !important;
-    font: 900 clamp(15px,1.25vw,20px)
-          monospace !important;
-    letter-spacing: 1px;
+    background: #57389d !important;
+    color: #fff4da !important;
+    border: 3px solid #99caff !important;
+    border-radius: 2px !important;
+    box-shadow: 5px 5px #211346 !important;
+    font: 900 clamp(15px,1.2vw,20px) monospace !important;
+    min-height: 56px !important;
 }
 
 .stButton > button:hover {
-    background: #7254c5 !important;
-    border-color: #d5e6ff !important;
+    background: #7855c6 !important;
+    border-color: #ffdf9b !important;
+}
+
+.m-title {
+    text-align: center;
+    color: #f8e8ff;
+    font: 900 clamp(30px,3.4vw,55px) monospace;
+    text-shadow: 3px 3px #6e43b2;
+    margin: 8px 0 14px;
+}
+
+.m-sub {
+    text-align: center;
+    color: #97eee3;
+    font: 700 14px monospace;
+    letter-spacing: 3px;
+    margin-bottom: 28px;
+}
+
+.m-card {
+    min-height: clamp(320px,50vh,530px);
+    background: #211742;
+    border: 3px solid #795ab7;
+    padding: clamp(20px,2.1vw,36px);
+    box-shadow: 6px 6px #09071d;
+    color: #f5ecff;
+}
+
+.m-num {
+    color: #81edc2;
+    font: 700 clamp(12px,1vw,17px) monospace;
+}
+
+.m-icon {
+    font-size: clamp(64px,7vw,115px);
+    margin: clamp(24px,4vh,50px) 0;
+}
+
+.m-name {
+    font-size: clamp(24px,2.3vw,38px);
+    font-weight: 900;
+}
+
+.m-desc {
+    color: #cfc2e5;
+    font-size: clamp(14px,1.2vw,20px);
+    line-height: 1.6;
+    margin: 18px 0;
+}
+
+.m-time {
+    color: #ffe394;
+    font: 900 clamp(23px,2.3vw,36px) monospace;
 }
 
 .how {
-    margin: 0 auto;
     max-width: 1100px;
-    background: #241949;
-    border: 3px solid #7961b8;
-    padding: clamp(20px,4vw,60px);
-    font-size: clamp(16px,1.3vw,22px);
+    margin: 20px auto;
+    background: #251946;
+    border: 3px solid #7456b4;
+    padding: 32px;
+    font-size: 19px;
     line-height: 2;
-    color: #e9defb;
+    color: #f4eaff;
 }
 
 @media(max-width:750px) {
-    .arcade {
-        min-height: 60vh;
-    }
-
-    .hero-title {
-        font-size: clamp(42px,11vw,76px);
-    }
-
-    .orbit {
-        font-size: 45px;
-    }
-
-    .mission-card {
-        min-height: 290px;
-    }
+    .hero-name { font-size: 11vw; }
+    .hero-copy { top: 48%; }
+    .arcade { height: 58vh; }
+    .space-art { opacity: .73; }
+    .m-card { min-height: 280px; }
 }
 </style>
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
 
 
-def html(content):
-    # HTML 들여쓰기 때문에 코드로 표시되는 문제 방지
+def html(s):
+    # HTML이 코드 블록으로 표시되지 않게 한 줄로 결합
     st.markdown(
-        "".join(line.strip() for line in content.splitlines()),
+        ''.join(x.strip() for x in s.splitlines()),
         unsafe_allow_html=True
     )
 
 
-# ===========================
-# 첫 번째 화면: 표지
-# ===========================
-
+# 화면 1: 타이틀
 if st.session_state.mecha_screen == "title":
 
-    html("""
+    html('''
     <div class="arcade">
-        <div class="arcade-top">
-            ✦ SPACE ROBOTICS ARCADE ✦
+      <div class="arcade-top">
+        ★ SPACE ROBOTICS ARCADE ★
+      </div>
+      <div class="space-art">
+        <span class="ship">🚀</span>
+        <span class="sat">🛰️</span>
+        <span class="world">🌎</span>
+        <span class="pixel-spark" style="left:38%;top:15%">✦</span>
+        <span class="pixel-spark" style="right:9%;top:3%">✧</span>
+        <span class="pixel-spark" style="left:57%;top:58%">+</span>
+      </div>
+      <div class="hero-copy">
+        <div class="hero-name">MECHA LAB</div>
+        <div class="hero-sub">
+          ★ START YOUR SPACE MISSION ★
         </div>
-
-        <div class="orbit">
-            <span>🚀</span>
-            <span>🛰️</span>
-            <span>🌎</span>
+        <div class="hero-meta">
+          1 PLAYER · 3 MISSIONS · ROBOT ARM
         </div>
-
-        <div>
-            <div class="hero-title">MECHA LAB</div>
-            <div class="hero-sub">
-                ★ START YOUR SPACE MISSION ★
-            </div>
-            <div class="hero-meta">
-                1 PLAYER · 3 MISSIONS · ROBOT ARM
-            </div>
-        </div>
-
-        <div class="pixel-hills"></div>
+      </div>
+      <div class="pixel-hills"></div>
     </div>
-    """)
+    ''')
 
-    left, mid, right = st.columns([1, 2, 1])
+    st.write("")
 
-    with mid:
-        if st.button("▶ START GAME", key="start"):
+    left, center, right = st.columns(
+        [1.7, 1.1, 1.7],
+        gap="medium"
+    )
+
+    with center:
+        if st.button(
+            "▶ START GAME",
+            key="start",
+            use_container_width=True
+        ):
             st.session_state.mecha_screen = "select"
             st.rerun()
 
-        if st.button("ⓘ HOW TO PLAY", key="how"):
+        if st.button(
+            "ⓘ HOW TO PLAY",
+            key="help",
+            use_container_width=True
+        ):
             st.session_state.mecha_screen = "how"
             st.rerun()
 
+    html(
+        '<div class="button-caption">'
+        'PRESS START TO BEGIN / SINGLE PLAYER'
+        '</div>'
+    )
 
-# ===========================
-# 두 번째 화면: 조작법
-# ===========================
 
+# 화면 2: 조작법
 elif st.session_state.mecha_screen == "how":
 
-    html("""
-    <div class="menu-title">HOW TO PLAY</div>
-
+    html('''
+    <div class="m-title">HOW TO PLAY</div>
     <div class="how">
-        🦾 빨간 관절을 마우스로 드래그해 회전하세요.
-        <br>
-        🎮 집게 끝을 목표에 맞추고
-        Space 키 또는 버튼으로 잡거나 놓으세요.
-        <br>
-        🪨 암석은 놓으면 중력에 따라 떨어지고 굴러갑니다.
-        <br>
-        ⏱ 제한시간 내에 미션을 완료하세요.
-        <br>
-        🛰️ 위성은 단계별 정비 작업을 모두 완료해야 합니다.
+      🦾 빨간 관절을 마우스로 원형 드래그해 움직이세요.
+      <br>
+      🎮 집게를 목표에 맞춘 뒤 Space 또는 집게 버튼을
+      눌러 잡거나 놓으세요.
+      <br>
+      🪨 암석을 놓으면 떨어지고 바닥에서 굴러갑니다.
+      <br>
+      ⏱ 제한시간 안에 세부 작업을 완료하세요.
     </div>
-    """)
+    ''')
 
     if st.button("◀ BACK TO TITLE"):
         st.session_state.mecha_screen = "title"
         st.rerun()
 
 
-# ===========================
-# 세 번째 화면: 미션 선택
-# ===========================
-
+# 화면 3: 미션 선택
 else:
 
-    html("""
-    <div class="menu-title">✦ SELECT MISSION ✦</div>
+    html(
+        '<div class="m-title">✦ SELECT MISSION ✦</div>'
+        '<div class="m-sub">'
+        'ONE PLAYER · THREE SPACE OPERATIONS'
+        '</div>'
+    )
 
-    <div class="menu-sub">
-        ONE PLAYER · THREE SPACE OPERATIONS
-    </div>
-    """)
+    missions = [
+        (
+            '01', '🪨', '화성 암석 집기',
+            'MARS SAMPLE COLLECTION',
+            '암석을 집어 멀리 떨어진 샘플 통으로 이동',
+            '01:30',
+            'pages/1_화성_암석_집기.py'
+        ),
+        (
+            '02', '🔋', '배터리 분리',
+            'BATTERY EXTRACTION',
+            '잠금을 해제하고 배터리를 오른쪽으로 추출',
+            '02:00',
+            'pages/2_배터리_분리.py'
+        ),
+        (
+            '03', '🛰️', '위성 수리',
+            'SATELLITE REPAIR',
+            '버튼 2개 · 스위치 · 4색 전선 · 신호 안테나',
+            '04:00',
+            'pages/3_위성_수리.py'
+        )
+    ]
 
-    cols = st.columns(3, gap="large")
+    columns = st.columns(3, gap="large")
 
-    for col, m in zip(cols, MISSIONS):
-
+    for col, (n, icon, title, en, desc, time, path) in zip(
+        columns, missions
+    ):
         with col:
 
-            html(f"""
-            <div class="mission-card">
-
-                <div class="card-number">
-                    MISSION {m['n']} / {m['sub']}
+            html(f'''
+            <div class="m-card">
+                <div class="m-num">
+                    MISSION {n} / {en}
                 </div>
-
-                <div class="card-icon">
-                    {m['icon']}
-                </div>
-
-                <div>
-                    <div class="card-name">
-                        {m['name']}
-                    </div>
-
-                    <div class="card-sub">
-                        {m['sub']}
-                    </div>
-
-                    <div class="card-desc">
-                        {m['desc']}
-                    </div>
-
-                    <div class="card-time">
-                        ⏱ {m['time']}
-                    </div>
-                </div>
-
+                <div class="m-icon">{icon}</div>
+                <div class="m-name">{title}</div>
+                <div class="m-desc">{desc}</div>
+                <div class="m-time">⏱ {time}</div>
             </div>
-            """)
+            ''')
 
             if st.button(
-                f"▶ MISSION {m['n']}",
-                key=m["n"]
+                f"▶ MISSION {n}",
+                key=f"mission_{n}",
+                use_container_width=True
             ):
-                st.switch_page(m["path"])
+                st.switch_page(path)
+
+    st.write("")
 
     if st.button("◀ BACK TO TITLE"):
         st.session_state.mecha_screen = "title"
