@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -158,8 +157,7 @@ button.primary {
       <p id="detail"></p>
       <button class="primary" id="retry">다시 도전</button>
       <p style="font-size:12px;color:#b6cbd4">
-        처음으로 돌아가기는 게임 아래의
-        Streamlit 버튼을 이용하세요.
+        처음으로 돌아가기는 게임 아래의 Streamlit 버튼을 이용하세요.
       </p>
     </div>
   </div>
@@ -191,10 +189,8 @@ const tasks = [
   "버튼 B 누르기",
   "슬라이드 스위치 작동",
   "4색 전선 연결",
-  "안테나 정렬 및 고정"
+  "움직이는 신호 지점에 안테나 정렬"
 ];
-
-const dock = {x: 740, y: 211};
 
 let angles, points;
 let drag = -1;
@@ -210,6 +206,7 @@ let wires = [];
 let wireIndex = -1;
 let antenna;
 let started, last;
+let sceneTime = 0;
 
 const duration = Number(cfg.duration) ||
   (cfg.mission === "rock" ? 90 :
@@ -266,6 +263,15 @@ function txt(value, x, y, size = 13, color = "#e3edf1") {
 
 function tell(value) {
   hint.textContent = value;
+}
+
+// ===== ANIMATION HELPERS =====
+
+function signalTarget() {
+  return {
+    x: 744 + Math.sin(sceneTime * 1.4) * 34,
+    y: 187 + Math.cos(sceneTime * 1.9) * 22
+  };
 }
 
 // ===== ROBOT ARM =====
@@ -332,7 +338,7 @@ function target() {
     return i < 0 ? {x: -999, y: -999} : wires[i].pos;
   }
 
-  return antenna;
+  return signalTarget();
 }
 
 function reach() {
@@ -342,14 +348,66 @@ function reach() {
     return looseWire() !== -1;
   }
 
-  const radius =
-    cfg.mission === "satellite" &&
-    (phase === 1 || phase === 2) ? 17 : 26;
+  let radius = 26;
+
+  if (cfg.mission === "satellite" && (phase === 1 || phase === 2)) {
+    radius = 17;
+  }
+
+  if (cfg.mission === "satellite" && phase === 5) {
+    radius = 24;
+  }
 
   return dist(tip(), target()) <= radius;
 }
 
 // ===== BACKGROUND =====
+
+function drawSpaceBackground() {
+  rect(0, 0, W, H, "#12263a");
+
+  // moving stars
+  for (let i = 0; i < 34; i++) {
+    const x = ((i * 61) + sceneTime * (8 + (i % 5) * 2)) % (W + 80) - 40;
+    const y = 35 + ((i * 79) % 360);
+    const r = 1 + (i % 3) * 0.7;
+    dot(x, y, r, i % 4 === 0 ? "#c5ecff" : "#dfefff");
+  }
+
+  // planet 1
+  const px1 = 860 - Math.sin(sceneTime * 0.22) * 25;
+  const py1 = 96 + Math.cos(sceneTime * 0.18) * 10;
+  dot(px1, py1, 34, "#6a6fbe");
+  dot(px1 - 10, py1 - 9, 10, "#9295e0");
+  ctx.strokeStyle = "#b1b4ef88";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.ellipse(px1, py1, 48, 12, -0.2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // planet 2
+  const px2 = 140 + Math.cos(sceneTime * 0.17) * 18;
+  const py2 = 90 + Math.sin(sceneTime * 0.23) * 12;
+  dot(px2, py2, 22, "#b67165");
+  dot(px2 - 5, py2 - 4, 7, "#d99c90");
+
+  // nebula glow
+  const g = ctx.createRadialGradient(500, 60, 10, 500, 60, 260);
+  g.addColorStop(0, "rgba(84,140,190,0.15)");
+  g.addColorStop(1, "rgba(84,140,190,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(180, 0, 640, 220);
+
+  for (let x = 0; x < W; x += 145) {
+    line(x, 0, x, H, "#27495d", 2);
+  }
+
+  for (let y = 0; y < H; y += 91) {
+    line(0, y, W, y, "#27495d", 2);
+  }
+
+  rect(0, 446, W, 54, "#27475a");
+}
 
 function background() {
   if (cfg.mission === "rock") {
@@ -367,7 +425,7 @@ function background() {
     }
 
     txt("MARS / SAMPLE ACQUISITION", 24, 33, 14, "#614537");
-  } else {
+  } else if (cfg.mission === "battery") {
     rect(0, 0, W, H, "#142c40");
 
     for (let x = 0; x < W; x += 145) {
@@ -379,13 +437,10 @@ function background() {
     }
 
     rect(0, 446, W, 54, "#27475a");
-
-    txt(
-      cfg.mission === "battery"
-        ? "ORBITAL BATTERY SERVICE"
-        : "SATELLITE REPAIR / EXTERNAL PANEL",
-      22, 32, 14, "#acd6e5"
-    );
+    txt("ORBITAL BATTERY SERVICE", 22, 32, 14, "#acd6e5");
+  } else {
+    drawSpaceBackground();
+    txt("SATELLITE REPAIR / EXTERNAL PANEL", 22, 32, 14, "#acd6e5");
   }
 }
 
@@ -447,8 +502,23 @@ function batteryScene() {
   );
 }
 
+function drawSignalWaves(node) {
+  const pulse = (Math.sin(sceneTime * 4) + 1) / 2;
+
+  for (let i = 0; i < 3; i++) {
+    const radius = 12 + i * 12 + pulse * 8;
+    ctx.strokeStyle = `rgba(130,238,177,${0.45 - i * 0.11})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius, -0.8, 0.8);
+    ctx.stroke();
+  }
+
+  line(node.x - 2, node.y + 18, node.x - 2, node.y + 34, "#89e8b0", 3);
+}
+
 function satelliteScene() {
-  // 태양전지판
+  // solar panels
   rect(487, 214, 84, 140, "#315471", 5);
   rect(766, 214, 88, 140, "#315471", 5);
 
@@ -459,7 +529,7 @@ function satelliteScene() {
     line(770, 238 + j * 29, 850, 238 + j * 29, "#6b9bb9", 2);
   }
 
-  // 위성 본체
+  // main body
   rect(557, 155, 225, 270, "#607e90", 14);
   rect(572, 173, 196, 230, "#244054", 10);
 
@@ -519,7 +589,6 @@ function satelliteScene() {
   else if (phase === 4) {
     wires.forEach(w => {
       line(w.home.x - 27, w.home.y, w.pos.x, w.pos.y, w.color, 5);
-
       dot(w.socket.x, w.socket.y, 13, "#1b3042", w.color, 5);
 
       dot(
@@ -533,26 +602,29 @@ function satelliteScene() {
   }
 
   else if (phase === 5) {
+    const node = signalTarget();
+
+    // antenna arm
     line(600, 354, antenna.x, antenna.y, "#d4b579", 12);
 
+    // antenna tip
     dot(
       antenna.x, antenna.y, 15,
       reach() ? "#80e6ab" : "#d6b579",
       "#e8e5d3", 3
     );
 
-    dot(dock.x, dock.y, 14, "#263f4f", "#82eeb1", 4);
-    txt("DOCK", dock.x - 17, dock.y - 24, 12);
+    // moving signal target
+    dot(node.x, node.y, 12, "#203f50", "#82eeb1", 4);
+    dot(node.x, node.y, 4, "#d8fff0");
+    drawSignalWaves(node);
 
-    txt("안테나를 도킹 위치에 고정", 579, 388, 12);
+    txt("SIGNAL", node.x - 22, node.y - 26, 12, "#9fe7c1");
+    txt("움직이는 전파 신호 지점에 안테나를 맞추세요", 545, 388, 12);
   }
 
   const connected = wires.filter(w => w.connected).length;
-
-  const value =
-    phase / 6 +
-    (phase === 4 ? connected / 24 : 0);
-
+  const value = phase / 6 + (phase === 4 ? connected / 24 : 0);
   gauge(value, "위성 정비 진행률");
 }
 
@@ -683,7 +755,7 @@ function action() {
 
   const p = tip();
 
-  // 배터리 잠금장치
+  // battery lock
   if (cfg.mission === "battery" && phase === 0) {
     if (!reach()) {
       tell("잠금장치에 집게 끝을 정확히 맞춰 주세요.");
@@ -695,7 +767,7 @@ function action() {
     return;
   }
 
-  // 위성 버튼 A와 B
+  // satellite buttons
   if (
     cfg.mission === "satellite" &&
     (phase === 1 || phase === 2)
@@ -750,7 +822,6 @@ function action() {
 
   held = false;
 
-  // 화성 암석 놓기
   if (cfg.mission === "rock") {
     if (
       rock.x > 458 && rock.x < 560 &&
@@ -768,24 +839,20 @@ function action() {
     return;
   }
 
-  // 위성 보호 덮개
   if (phase === 0) {
     if (cover.x < 555) next();
     else tell("덮개를 왼쪽으로 더 옮기세요.");
     return;
   }
 
-  // 슬라이드 스위치
   if (phase === 3) {
     if (switchX >= 715) next();
     else tell("스위치를 오른쪽 끝까지 옮기세요.");
     return;
   }
 
-  // 네 가지 전선 연결
   if (phase === 4) {
     const w = wires[wireIndex];
-
     if (!w) return;
 
     if (dist(w.pos, w.socket) <= 19) {
@@ -806,14 +873,18 @@ function action() {
     return;
   }
 
-  // 안테나 도킹
   if (phase === 5) {
-    if (dist(antenna, dock) <= 19) next();
-    else tell("안테나 끝을 초록색 도킹 지점에 맞춰 주세요.");
+    const node = signalTarget();
+
+    if (dist(antenna, node) <= 22) {
+      next();
+    } else {
+      tell("움직이는 신호 위치에 안테나 끝을 맞춰 주세요.");
+    }
   }
 }
 
-// ===== MOUSE CONTROL =====
+// ===== POINTER CONTROL =====
 
 function mouse(e) {
   const r = canvas.getBoundingClientRect();
@@ -878,11 +949,7 @@ canvas.addEventListener("pointermove", e => {
   draw();
 });
 
-for (const event of [
-  "pointerup",
-  "pointercancel",
-  "lostpointercapture"
-]) {
+for (const event of ["pointerup", "pointercancel", "lostpointercapture"]) {
   canvas.addEventListener(event, () => {
     drag = -1;
     lastPointer = null;
@@ -894,6 +961,7 @@ for (const event of [
 function tick(now) {
   const dt = clamp((now - last) / 1000, 0, .05);
   last = now;
+  sceneTime = (now - started) / 1000;
 
   if (!done) {
     const remaining = Math.max(
@@ -1022,6 +1090,7 @@ function restart() {
 
   started = performance.now();
   last = started;
+  sceneTime = 0;
 
   document.getElementById("overlay").classList.remove("show");
 
@@ -1033,7 +1102,7 @@ function restart() {
   clock.classList.remove("red");
 
   if (cfg.mission === "satellite") {
-    tell("6단계: 덮개 → 버튼 A → 버튼 B → 스위치 → 전선 → 안테나");
+    tell("6단계: 덮개 → 버튼 A → 버튼 B → 스위치 → 전선 → 움직이는 신호 지점에 안테나 정렬");
   } else {
     tell("집게 끝을 목표에 맞추고 버튼을 눌러 작업하세요.");
   }
