@@ -104,7 +104,7 @@ button.primary {
   z-index: 20;
   align-items: center;
   justify-content: center;
-  background: #07121ce8;
+  background: rgba(7, 18, 28, 0.65);
 }
 
 #overlay.show {
@@ -118,6 +118,7 @@ button.primary {
   background: #22394b;
   border: 1px solid #9bb9c5;
   border-radius: 17px;
+  backdrop-filter: blur(3px);
 }
 
 .dialog h1 {
@@ -205,8 +206,16 @@ let progress = 0;
 let wires = [];
 let wireIndex = -1;
 let antenna;
+
 let started, last;
 let sceneTime = 0;
+
+let endingState = null;     // "success" | "fail" | null
+let endingStart = 0;
+let overlayReady = false;
+let burstParticles = [];
+let celebrationBaseAngles = null;
+let failPoints = null;
 
 const duration = Number(cfg.duration) ||
   (cfg.mission === "rock" ? 90 :
@@ -274,14 +283,48 @@ function signalTarget() {
   };
 }
 
+function makeParticles() {
+  const origin = tip();
+  const colors = ["#ffcf86", "#7df0bb", "#ff8e82", "#88dfff", "#fff1a8"];
+
+  burstParticles = [];
+
+  for (let i = 0; i < 42; i++) {
+    const angle = (Math.PI * 2 * i) / 42 + Math.random() * 0.25;
+    const speed = 80 + Math.random() * 180;
+
+    burstParticles.push({
+      x: origin.x,
+      y: origin.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 30,
+      size: 3 + Math.random() * 4,
+      color: colors[i % colors.length]
+    });
+  }
+}
+
+function drawParticles(t) {
+  burstParticles.forEach(p => {
+    const x = p.x + p.vx * t;
+    const y = p.y + p.vy * t + 120 * t * t;
+    const alpha = Math.max(0, 1 - t / 2.2);
+
+    ctx.globalAlpha = alpha;
+    dot(x, y, p.size, p.color);
+    ctx.globalAlpha = 1;
+  });
+}
+
 // ===== ROBOT ARM =====
 
-function arm() {
+function arm(customAngles = null) {
+  const usedAngles = customAngles || angles;
   points = [{...base}];
   let angle = 0;
 
   for (let i = 0; i < 3; i++) {
-    angle += angles[i];
+    angle += usedAngles[i];
     const p = points[i];
 
     points.push({
@@ -293,9 +336,10 @@ function arm() {
   return points[3];
 }
 
-function tip() {
-  const wrist = arm();
-  const angle = angles.reduce((sum, v) => sum + v, 0);
+function tip(customAngles = null) {
+  const wrist = arm(customAngles);
+  const usedAngles = customAngles || angles;
+  const angle = usedAngles.reduce((sum, v) => sum + v, 0);
 
   return {
     x: wrist.x + 61 * Math.cos(angle),
@@ -366,7 +410,6 @@ function reach() {
 function drawSpaceBackground() {
   rect(0, 0, W, H, "#12263a");
 
-  // moving stars
   for (let i = 0; i < 34; i++) {
     const x = ((i * 61) + sceneTime * (8 + (i % 5) * 2)) % (W + 80) - 40;
     const y = 35 + ((i * 79) % 360);
@@ -374,7 +417,6 @@ function drawSpaceBackground() {
     dot(x, y, r, i % 4 === 0 ? "#c5ecff" : "#dfefff");
   }
 
-  // planet 1
   const px1 = 860 - Math.sin(sceneTime * 0.22) * 25;
   const py1 = 96 + Math.cos(sceneTime * 0.18) * 10;
   dot(px1, py1, 34, "#6a6fbe");
@@ -385,13 +427,11 @@ function drawSpaceBackground() {
   ctx.ellipse(px1, py1, 48, 12, -0.2, 0, Math.PI * 2);
   ctx.stroke();
 
-  // planet 2
   const px2 = 140 + Math.cos(sceneTime * 0.17) * 18;
   const py2 = 90 + Math.sin(sceneTime * 0.23) * 12;
   dot(px2, py2, 22, "#b67165");
   dot(px2 - 5, py2 - 4, 7, "#d99c90");
 
-  // nebula glow
   const g = ctx.createRadialGradient(500, 60, 10, 500, 60, 260);
   g.addColorStop(0, "rgba(84,140,190,0.15)");
   g.addColorStop(1, "rgba(84,140,190,0)");
@@ -518,7 +558,6 @@ function drawSignalWaves(node) {
 }
 
 function satelliteScene() {
-  // solar panels
   rect(487, 214, 84, 140, "#315471", 5);
   rect(766, 214, 88, 140, "#315471", 5);
 
@@ -529,7 +568,6 @@ function satelliteScene() {
     line(770, 238 + j * 29, 850, 238 + j * 29, "#6b9bb9", 2);
   }
 
-  // main body
   rect(557, 155, 225, 270, "#607e90", 14);
   rect(572, 173, 196, 230, "#244054", 10);
 
@@ -604,17 +642,14 @@ function satelliteScene() {
   else if (phase === 5) {
     const node = signalTarget();
 
-    // antenna arm
     line(600, 354, antenna.x, antenna.y, "#d4b579", 12);
 
-    // antenna tip
     dot(
       antenna.x, antenna.y, 15,
       reach() ? "#80e6ab" : "#d6b579",
       "#e8e5d3", 3
     );
 
-    // moving signal target
     dot(node.x, node.y, 12, "#203f50", "#82eeb1", 4);
     dot(node.x, node.y, 4, "#d8fff0");
     drawSignalWaves(node);
@@ -630,53 +665,36 @@ function satelliteScene() {
 
 // ===== ARM GRAPHICS =====
 
-function drawArm() {
-  const wrist = arm();
+function drawLinkGraphic(x1, y1, x2, y2) {
+  line(x1 + 5, y1 + 5, x2 + 5, y2 + 5, "#263846", 35);
+  line(x1, y1, x2, y2, "#405e6e", 30);
+  line(x1, y1, x2, y2, "#abc4c9", 19);
+  line(x1 + 4, y1 - 4, x2 + 4, y2 - 4, "#ede5d8", 4);
 
-  rect(54, 423, 128, 57, "#293f50", 7);
-  rect(75, 439, 87, 10, "#7397a2", 3);
+  dot(
+    x1 + (x2 - x1) * .32,
+    y1 + (y2 - y1) * .32,
+    6, "#e9a875", "#405564", 2
+  );
+}
 
-  for (let i = 0; i < 3; i++) {
-    const a = points[i];
-    const b = points[i + 1];
+function drawJointGraphic(x, y, active = false, label = "") {
+  dot(x, y, 20, "#324b5b", "#dce9ec", 4);
+  dot(x, y, 13, active ? "#ffcb69" : "#da6d62", "#2c4150", 3);
+  dot(x, y, 3, "#fff7df");
 
-    line(a.x + 5, a.y + 5, b.x + 5, b.y + 5, "#263846", 35);
-    line(a.x, a.y, b.x, b.y, "#405e6e", 30);
-    line(a.x, a.y, b.x, b.y, "#abc4c9", 19);
-    line(a.x + 4, a.y - 4, b.x + 4, b.y - 4, "#ede5d8", 4);
+  if (label) txt(label, x - 11, y - 26, 12);
+}
 
-    dot(
-      a.x + (b.x - a.x) * .32,
-      a.y + (b.y - a.y) * .32,
-      6, "#e9a875", "#405564", 2
-    );
-  }
-
-  for (let i = 0; i < 3; i++) {
-    const p = points[i];
-
-    dot(p.x, p.y, 20, "#324b5b", "#dce9ec", 4);
-
-    dot(
-      p.x, p.y, 13,
-      drag === i ? "#ffcb69" : "#da6d62",
-      "#2c4150", 3
-    );
-
-    dot(p.x, p.y, 3, "#fff7df");
-    txt("J" + (i + 1), p.x - 11, p.y - 26, 12);
-  }
-
-  const angle = angles.reduce((s, v) => s + v, 0);
-
+function drawGripperFrom(wrist, totalAngle, closed) {
   ctx.save();
   ctx.translate(wrist.x, wrist.y);
-  ctx.rotate(angle);
+  ctx.rotate(totalAngle);
 
   rect(-4, -15, 37, 30, "#425e6d", 6);
   rect(21, -10, 23, 20, "#c1d5d5", 4);
 
-  const gap = held ? 7 : 19;
+  const gap = closed ? 7 : 19;
 
   line(43, -gap, 56, -gap, "#d9e7e6", 9);
   line(43, gap, 56, gap, "#d9e7e6", 9);
@@ -686,14 +704,196 @@ function drawArm() {
 
   ctx.restore();
 
-  const p = tip();
+  const p = {
+    x: wrist.x + 61 * Math.cos(totalAngle),
+    y: wrist.y + 61 * Math.sin(totalAngle)
+  };
 
   dot(
     p.x, p.y, 5,
-    reach() ? "#66f1a8" : "#f6c67a",
+    endingState === "success" ? "#66f1a8" : "#f6c67a",
     "#183443", 2
   );
 }
+
+function drawArm(displayAngles = null) {
+  const useAngles = displayAngles || angles;
+  const savedPoints = [{...base}];
+  let acc = 0;
+
+  for (let i = 0; i < 3; i++) {
+    acc += useAngles[i];
+    const p = savedPoints[i];
+
+    savedPoints.push({
+      x: p.x + Math.cos(acc) * lengths[i],
+      y: p.y + Math.sin(acc) * lengths[i]
+    });
+  }
+
+  rect(54, 423, 128, 57, "#293f50", 7);
+  rect(75, 439, 87, 10, "#7397a2", 3);
+
+  for (let i = 0; i < 3; i++) {
+    const a = savedPoints[i];
+    const b = savedPoints[i + 1];
+    drawLinkGraphic(a.x, a.y, b.x, b.y);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const p = savedPoints[i];
+    drawJointGraphic(p.x, p.y, drag === i, "J" + (i + 1));
+  }
+
+  const totalAngle = useAngles.reduce((s, v) => s + v, 0);
+  const wrist = savedPoints[3];
+  drawGripperFrom(wrist, totalAngle, held);
+}
+
+function drawBrokenArm(t) {
+  if (!failPoints) return;
+
+  const p0 = failPoints[0];
+  const p1 = failPoints[1];
+  const p2 = failPoints[2];
+  const p3 = failPoints[3];
+
+  rect(54, 423, 128, 57, "#293f50", 7);
+  rect(75, 439, 87, 10, "#7397a2", 3);
+
+  drawJointGraphic(p0.x, p0.y, false, "J1");
+
+  function drawPiece(start, end, dx, dy, rot, withLabel = false, label = "") {
+    ctx.save();
+    ctx.translate(dx, dy);
+    ctx.translate(start.x, start.y);
+    ctx.rotate(rot);
+    ctx.translate(-start.x, -start.y);
+
+    drawLinkGraphic(start.x, start.y, end.x, end.y);
+    drawJointGraphic(start.x, start.y, false, withLabel ? label : "");
+    drawJointGraphic(end.x, end.y, false);
+
+    ctx.restore();
+  }
+
+  const tt = Math.min(1.5, t);
+
+  drawPiece(p0, p1, 12 * tt, 18 * tt, -0.35 * tt, false);
+  drawPiece(p1, p2, 50 * tt, 50 * tt, 0.9 * tt, true, "J2");
+  drawPiece(p2, p3, 92 * tt, 84 * tt, 1.45 * tt, true, "J3");
+
+  for (let i = 0; i < 12; i++) {
+    const sx = p1.x + i * 6;
+    const sy = p1.y - (i % 3) * 3;
+    line(
+      sx, sy,
+      sx + Math.cos(i) * (18 + tt * 18),
+      sy + Math.sin(i * 1.2) * (12 + tt * 9),
+      "#ffb45e", 2
+    );
+  }
+}
+
+// ===== SUCCESS/FAIL SPECIAL EFFECTS =====
+
+function drawRover(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+
+  rect(-45, -18, 90, 24, "#748a7f", 6);
+  rect(-18, -40, 42, 25, "#a6b7ac", 5);
+  rect(18, -50, 24, 8, "#d4d7cc", 4);
+
+  line(-5, -15, 18, -42, "#98a89e", 4);
+  dot(20, -44, 6, "#cfe6e4");
+
+  dot(-28, 14, 12, "#2b3c45");
+  dot(2, 14, 12, "#2b3c45");
+  dot(32, 14, 12, "#2b3c45");
+
+  dot(-28, 14, 5, "#81989a");
+  dot(2, 14, 5, "#81989a");
+  dot(32, 14, 5, "#81989a");
+
+  ctx.restore();
+}
+
+function drawSuspendedBattery(x, y, scale = 1) {
+  line(x, 0, x, y - 20, "#bfcfd8", 3);
+
+  rect(x - 26 * scale, y - 20 * scale, 52 * scale, 40 * scale, "#efc16d", 7);
+  rect(x - 20 * scale, y - 12 * scale, 40 * scale, 8 * scale, "#f8e3aa", 3);
+  txt("Li", x - 8, y + 4, 12, "#304453");
+}
+
+function drawMeteor(x, y) {
+  for (let i = 0; i < 8; i++) {
+    ctx.globalAlpha = Math.max(0.05, 0.32 - i * 0.035);
+    line(x + i * 20, y - i * 12, x + i * 55, y - i * 28, "#ffe29c", 7 - i * 0.7);
+  }
+  ctx.globalAlpha = 1;
+  dot(x, y, 15, "#fff0b4");
+  dot(x - 6, y - 4, 8, "#ffd98b");
+}
+
+function drawCelebrationSatellite(x, y, t) {
+  const wobble = Math.sin(t * 7) * 0.12;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(wobble);
+
+  rect(-64, -38, 128, 76, "#607e90", 12);
+  rect(-54, -28, 108, 56, "#244054", 8);
+  rect(-138, -28, 58, 56, "#315471", 4);
+  rect(80, -28, 58, 56, "#315471", 4);
+
+  for (let i = 0; i < 3; i++) {
+    line(-128 + i * 18, -24, -128 + i * 18, 24, "#6b9bb9", 2);
+    line(90 + i * 18, -24, 90 + i * 18, 24, "#6b9bb9", 2);
+  }
+
+  line(-10, 38, 28, 70, "#d4b579", 6);
+  dot(28, 70, 8, "#8ee8b7", "#e8f6ea", 2);
+
+  ctx.restore();
+}
+
+function drawSuccessEffects(t) {
+  drawParticles(t);
+
+  if (cfg.mission === "rock") {
+    const roverX = W + 120 - Math.min(t * 280, W + 280);
+    drawRover(roverX, 406, 1.05);
+  }
+
+  if (cfg.mission === "battery") {
+    const starts = [0.1, 0.45, 0.8];
+    const xs = [110, 180, 250];
+
+    for (let i = 0; i < 3; i++) {
+      const local = Math.max(0, t - starts[i]);
+      const y = 30 + clamp(local * 170, 0, 145);
+      drawSuspendedBattery(xs[i], y, 1);
+    }
+  }
+
+  if (cfg.mission === "satellite") {
+    const meteorT = Math.max(0, t - 0.2);
+    const mx = 930 - meteorT * 320;
+    const my = 80 + meteorT * 170;
+    drawMeteor(mx, my);
+    drawCelebrationSatellite(855, 95, t);
+  }
+}
+
+function drawFailureEffects(t) {
+  drawBrokenArm(t);
+}
+
+// ===== DRAW =====
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
@@ -703,20 +903,30 @@ function draw() {
   else if (cfg.mission === "battery") batteryScene();
   else satelliteScene();
 
-  drawArm();
+  if (endingState === "fail") {
+    drawFailureEffects((performance.now() - endingStart) / 1000);
+  } else {
+    drawArm();
+  }
 
-  txt(
-    "관절 선택 → 원형으로 드래그",
-    20, 68, 13,
-    cfg.mission === "rock" ? "#5c3b30" : "#b8dbe7"
-  );
+  if (endingState === "success") {
+    drawSuccessEffects((performance.now() - endingStart) / 1000);
+  }
 
-  if (reach()) {
+  if (!done) {
     txt(
-      "● 접촉했습니다! 집게 버튼을 누르세요",
-      20, 92, 13,
-      cfg.mission === "rock" ? "#317650" : "#88e8b1"
+      "관절 선택 → 원형으로 드래그",
+      20, 68, 13,
+      cfg.mission === "rock" ? "#5c3b30" : "#b8dbe7"
     );
+
+    if (reach()) {
+      txt(
+        "● 접촉했습니다! 집게 버튼을 누르세요",
+        20, 92, 13,
+        cfg.mission === "rock" ? "#317650" : "#88e8b1"
+      );
+    }
   }
 }
 
@@ -724,11 +934,23 @@ function draw() {
 
 function finish(success) {
   if (done) return;
+
   done = true;
   held = false;
+  endingState = success ? "success" : "fail";
+  endingStart = performance.now();
+  overlayReady = false;
+
+  arm();
+
+  if (success) {
+    celebrationBaseAngles = [...angles];
+    makeParticles();
+  } else {
+    failPoints = points.map(p => ({...p}));
+  }
 
   const out = document.getElementById("outcome");
-
   out.textContent = success ? "SUCCESS" : "FAILED";
   out.style.color = success ? "#a1efbb" : "#fc8179";
 
@@ -736,7 +958,11 @@ function finish(success) {
     success
       ? "임무를 성공적으로 완료했습니다."
       : "제한시간이 종료되었습니다.";
+}
 
+function showOverlay() {
+  if (overlayReady) return;
+  overlayReady = true;
   document.getElementById("overlay").classList.add("show");
 }
 
@@ -755,7 +981,6 @@ function action() {
 
   const p = tip();
 
-  // battery lock
   if (cfg.mission === "battery" && phase === 0) {
     if (!reach()) {
       tell("잠금장치에 집게 끝을 정확히 맞춰 주세요.");
@@ -767,7 +992,6 @@ function action() {
     return;
   }
 
-  // satellite buttons
   if (
     cfg.mission === "satellite" &&
     (phase === 1 || phase === 2)
@@ -1029,6 +1253,20 @@ function tick(now) {
         }
       }
     }
+  } else {
+    const endT = (now - endingStart) / 1000;
+
+    if (endingState === "success" && celebrationBaseAngles) {
+      angles = [
+        celebrationBaseAngles[0] + Math.sin(endT * 5.2) * 0.30,
+        celebrationBaseAngles[1] + Math.sin(endT * 7.4 + 0.8) * 0.24,
+        celebrationBaseAngles[2] + Math.cos(endT * 8.6 + 0.3) * 0.38
+      ];
+    }
+
+    if (!overlayReady && endT > 2.4) {
+      showOverlay();
+    }
   }
 
   draw();
@@ -1091,6 +1329,13 @@ function restart() {
   started = performance.now();
   last = started;
   sceneTime = 0;
+
+  endingState = null;
+  endingStart = 0;
+  overlayReady = false;
+  burstParticles = [];
+  celebrationBaseAngles = null;
+  failPoints = null;
 
   document.getElementById("overlay").classList.remove("show");
 
